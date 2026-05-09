@@ -1,0 +1,75 @@
+"""
+Govinda AI – Exotel Call Backend
+RKJ Labs
+
+Run:  pip install flask flask-cors requests
+      python app.py
+
+Then open index.html (or the Govinda HTML file) in your browser.
+The HTML will automatically route calls through this local proxy,
+bypassing all CORS restrictions.
+"""
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import requests
+
+app = Flask(__name__)
+CORS(app)  # Allow requests from any origin (the HTML file / browser)
+
+# ── Exotel credentials ────────────────────────────────────────────
+EXOTEL_API_KEY   = '49247f52bc1daecb864dd16663e55c8eac997c200bc4e8ae'
+EXOTEL_API_TOKEN = 'e0843eaed23d3a3e725b193ae6131130da6825ca39fe4934'
+EXOTEL_ACCOUNT   = 'xpertnoteanalytics1'
+EXOTEL_URL       = f'https://api.exotel.com/v1/Accounts/{EXOTEL_ACCOUNT}/Calls.json'
+# ─────────────────────────────────────────────────────────────────
+
+
+@app.route('/call', methods=['POST', 'OPTIONS'])
+def make_call():
+    """Proxy a call request to Exotel, avoiding browser CORS restrictions."""
+    if request.method == 'OPTIONS':
+        # Pre-flight CORS check
+        return '', 204
+
+    payload = {
+        'From'    : request.form.get('From',    '09513886363'),
+        'To'      : request.form.get('To'),
+        'CallerId': request.form.get('CallerId','09513886363'),
+        'CustomField': request.form.get('CustomField', 'RKJ_LABS_FEEDBACK'),
+        'Record'  : request.form.get('Record',  'true'),
+        'RecordingChannels': request.form.get('RecordingChannels', 'dual'),
+    }
+
+    if not payload['To']:
+        return jsonify({'error': 'Missing "To" phone number'}), 400
+
+    try:
+        resp = requests.post(
+            EXOTEL_URL,
+            auth=(EXOTEL_API_KEY, EXOTEL_API_TOKEN),
+            data=payload,
+            timeout=15,
+        )
+        return jsonify(resp.json()), resp.status_code
+
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'Exotel request timed out'}), 504
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({'error': f'Could not reach Exotel: {str(e)}'}), 502
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'ok', 'service': 'Govinda AI Call Proxy'})
+
+
+if __name__ == '__main__':
+    print("\n" + "="*52)
+    print("  🧑‍⚕️  Govinda AI – Exotel Call Proxy")
+    print("  🚀  Running at http://localhost:5000")
+    print("  ✅  Open your Govinda HTML file in the browser")
+    print("="*52 + "\n")
+    app.run(host='0.0.0.0', port=5000, debug=False)
