@@ -1,0 +1,4148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Govinda AI – RKJ Labs (Avatar Edition)</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #04070f;
+    --surface: #0b1120;
+    --surface2: #111c30;
+    --border: #1e3050;
+    --accent: #00c6ff;
+    --accent2: #0066ff;
+    --accent3: #00ff99;
+    --text: #e8f0fe;
+    --text-muted: #6b8ab8;
+    --red: #ff4757;
+    --gold: #ffd32a;
+    --violet: #a78bfa;
+    --radius: 16px;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { height: 100%; }
+  body {
+    height: 100%; background: var(--bg); color: var(--text);
+    font-family: var(--font-body); display: flex; flex-direction: column; overflow: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 20%, rgba(0,102,255,0.10) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 35% at 90% 80%, rgba(0,198,255,0.07) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 20px;
+    background: rgba(11,17,32,0.97);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .logo-group { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 17px; box-shadow: 0 0 18px rgba(0,102,255,0.4);
+  }
+  .logo-text {
+    font-family: var(--font-head); font-size: 20px; font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .logo-sub { font-size: 10px; color: var(--text-muted); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .header-loc {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 5px 11px; border-radius: 30px; font-size: 11px; color: var(--text-muted);
+  }
+  .live-dot {
+    width: 7px; height: 7px; background: var(--accent3);
+    border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+
+  /* ── Voice status bar ── */
+  #voice-bar {
+    position: relative; z-index: 10;
+    background: rgba(167,139,250,0.06);
+    border-bottom: 1px solid rgba(167,139,250,0.2);
+    padding: 5px 20px;
+    display: none; align-items: center; justify-content: space-between;
+    flex-shrink: 0; gap: 12px;
+  }
+  #voice-bar.active { display: flex; }
+  .vbar-left { display: flex; align-items: center; gap: 10px; }
+  .vbar-icon { font-size: 14px; }
+  .vbar-text { font-size: 11px; color: var(--violet); font-weight: 500; }
+
+  .waveform { display: flex; align-items: center; gap: 2px; height: 18px; }
+  .wbar {
+    width: 3px; background: var(--violet); border-radius: 2px;
+    animation: wave 0.55s ease-in-out infinite;
+  }
+  .wbar:nth-child(1){height:4px;animation-delay:0s}
+  .wbar:nth-child(2){height:10px;animation-delay:0.08s}
+  .wbar:nth-child(3){height:18px;animation-delay:0.16s}
+  .wbar:nth-child(4){height:12px;animation-delay:0.24s}
+  .wbar:nth-child(5){height:16px;animation-delay:0.1s}
+  .wbar:nth-child(6){height:8px;animation-delay:0.2s}
+  .wbar:nth-child(7){height:5px;animation-delay:0.32s}
+  @keyframes wave {
+    0%,100% { transform: scaleY(1);   opacity: 0.55; }
+    50%      { transform: scaleY(2.2); opacity: 1;    }
+  }
+
+  .speak-wave { display: flex; align-items: center; gap: 2px; height: 18px; }
+  .sbar {
+    width: 3px; background: var(--accent3); border-radius: 2px;
+    animation: swave 0.45s ease-in-out infinite;
+  }
+  .sbar:nth-child(1){height:4px;animation-delay:0s}
+  .sbar:nth-child(2){height:14px;animation-delay:0.08s}
+  .sbar:nth-child(3){height:20px;animation-delay:0.16s}
+  .sbar:nth-child(4){height:14px;animation-delay:0.08s}
+  .sbar:nth-child(5){height:4px;animation-delay:0s}
+  @keyframes swave {
+    0%,100%{transform:scaleY(.5);opacity:.5}
+    50%{transform:scaleY(1.1);opacity:1}
+  }
+
+  /* ── Filter Bar ── */
+  #filter-bar {
+    position: relative; z-index: 9;
+    background: rgba(17,28,48,0.95);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 20px;
+    display: none; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0;
+  }
+  #filter-bar.visible { display: flex; }
+  #filter-bar label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing:.8px; white-space:nowrap; }
+  .filter-chip {
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); transition: all .18s;
+  }
+  .filter-chip:hover { border-color: var(--accent2); color: var(--accent); }
+  .filter-chip.active { background: rgba(0,102,255,.18); border-color: var(--accent2); color: var(--accent); }
+  .filter-chip.active-open { background: rgba(0,255,153,.12); border-color: var(--accent3); color: var(--accent3); }
+  .filter-chip.active-rating { background: rgba(255,211,42,.12); border-color: var(--gold); color: var(--gold); }
+  .filter-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+  .clear-filter {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    cursor: pointer; border: 1px solid rgba(255,71,87,.3); background: rgba(255,71,87,.08);
+    color: var(--red); transition: all .18s;
+  }
+  .clear-filter:hover { background: rgba(255,71,87,.18); }
+
+  /* ── Config Bar ── */
+  #config-toggle-row {
+    position: relative; z-index: 10;
+    background: rgba(17,28,48,0.97);
+    border-bottom: none;
+    padding: 6px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  #config-panel {
+    position: relative; z-index: 10;
+    background: rgba(17,28,48,0.97);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 20px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0;
+  }
+  #config-panel label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing:.8px; white-space:nowrap; }
+  .api-input {
+    flex: 1; min-width: 160px; max-width: 260px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 7px; padding: 6px 10px;
+    color: var(--text); font-size: 12px; outline: none; transition: border-color .2s;
+  }
+  .api-input:focus { border-color: var(--accent2); }
+  .api-input::placeholder { color: var(--text-muted); }
+  .rad-wrap { display:flex; align-items:center; gap:7px; }
+  input[type=range] {
+    -webkit-appearance:none; width:110px; height:4px;
+    background: linear-gradient(90deg,var(--accent2),var(--accent));
+    border-radius:2px; outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:13px; height:13px;
+    background:var(--accent); border-radius:50%; box-shadow:0 0 6px var(--accent); cursor:pointer;
+  }
+  #rad-lbl {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:6px; padding:3px 9px; font-size:12px; font-weight:600; color:var(--accent);
+    min-width:55px; text-align:center;
+  }
+  .apply-btn {
+    padding:6px 16px; background:linear-gradient(135deg,var(--accent2),var(--accent));
+    border:none; border-radius:7px; color:#fff; font-size:12px; font-weight:600;
+    cursor:pointer; transition:opacity .2s;
+  }
+  .apply-btn:hover { opacity:.88; }
+
+  /* ── Main Layout ── */
+  .main { flex:1; display:flex; min-height:0; position:relative; z-index:5; overflow:hidden; }
+
+  /* ── Sidebar — REMOVED; replaced by quick-search drawer ── */
+  .sidebar { display: none !important; }
+
+  /* ── Quick Search Toggle Button (floats over avatar panel) ── */
+  #qs-toggle-btn {
+    position: absolute; bottom: 10%; left: 66%;
+    transform: none;
+    z-index: 20;
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 11px; border-radius: 30px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none; color: #fff;
+    font-family: var(--font-body); font-size: 10px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    box-shadow: 0 4px 18px rgba(0,102,255,0.45);
+    transition: all 0.2s;
+  }
+  #qs-toggle-btn:hover { opacity: 0.9; transform: scale(1.04); }
+  #qs-toggle-btn .qs-arrow { transition: transform 0.3s; display: inline-block; }
+  #qs-toggle-btn.open .qs-arrow { transform: rotate(180deg); }
+
+  /* ── Quick Search Drawer (slides over avatar from bottom) ── */
+  #qs-drawer {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(11,17,32,0.98);
+    border-top: 1px solid rgba(0,198,255,0.25);
+    border-radius: 16px 16px 0 0;
+    z-index: 15;
+    padding: 12px 10px 10px;
+    display: flex; flex-direction: column; gap: 5px;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.34,1.20,0.64,1);
+    max-height: 75%;
+    overflow-y: auto;
+  }
+  #qs-drawer.open { transform: translateY(0); }
+  #qs-drawer::-webkit-scrollbar { width: 2px; }
+  #qs-drawer::-webkit-scrollbar-thumb { background: var(--border); }
+  .qs-drawer-title {
+    font-family: var(--font-head); font-size: 10px; font-weight: 700;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 1px;
+    padding: 0 4px 4px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .qs-close-btn {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 14px; line-height: 1; padding: 0;
+  }
+  .qs-close-btn:hover { color: var(--accent); }
+
+  /* Quick search button styles (used inside drawer) */
+  .qbtn {
+    display:flex; align-items:center; gap:8px;
+    padding:8px 10px; background:var(--surface); border:1px solid var(--border);
+    border-radius:9px; cursor:pointer; color:var(--text);
+    font-family:var(--font-body); font-size:11px; transition:all .18s; text-align:left; width:100%;
+  }
+  .qbtn:hover { background:var(--surface2); border-color:var(--accent2); }
+  .qbtn .qi {
+    width:24px; height:24px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;
+  }
+
+  /* ── Chat ── */
+  .chat-col { flex:0 0 65%; width:65%; display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden; }
+  #msgs {
+    flex:1; overflow-y:auto; padding:18px 20px;
+    display:flex; flex-direction:column; gap:14px;
+    scroll-behavior:smooth; min-height:0;
+  }
+  #msgs::-webkit-scrollbar{width:5px}
+  #msgs::-webkit-scrollbar-track{background:transparent}
+  #msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  #msgs::-webkit-scrollbar-thumb:hover{background:var(--accent2)}
+
+  /* Welcome */
+  .welcome {
+    background:linear-gradient(135deg,var(--surface),rgba(0,102,255,.08));
+    border:1px solid var(--border); border-radius:var(--radius);
+    padding:22px; text-align:center; max-width:480px; margin:10px auto;
+  }
+  .welcome .wi { font-size:40px; margin-bottom:10px; filter:drop-shadow(0 0 14px rgba(0,198,255,.5)); }
+  .welcome h2 {
+    font-family:var(--font-head); font-size:22px; font-weight:800; margin-bottom:8px;
+    background:linear-gradient(90deg,var(--accent),var(--accent3));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .welcome p { font-size:13px; color:var(--text-muted); line-height:1.6; margin-bottom:14px; }
+  .loc-chip {
+    display:inline-flex; align-items:center; gap:5px;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:30px; padding:5px 12px; font-size:11px; color:var(--text-muted);
+    margin-bottom:8px;
+  }
+  .voice-hint {
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.2);
+    border-radius:30px; padding:5px 12px; font-size:11px; color:var(--violet);
+    margin-top:6px;
+  }
+
+  /* Messages */
+  .msg { display:flex; gap:9px; animation:fadeUp .28s ease both; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  .msg.user { flex-direction:row-reverse; align-self:flex-end; max-width:80%; }
+  .msg.bot  { align-self:flex-start; max-width:94%; }
+  .av {
+    width:30px; height:30px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; flex-shrink:0; align-self:flex-end;
+  }
+  .msg.bot .av  { background:linear-gradient(135deg,#c026d3,#a78bfa); box-shadow:0 0 10px rgba(167,139,250,.45); font-size:17px; }
+  .msg.user .av { background:var(--surface2); border:1px solid var(--border); }
+  .bub { padding:11px 14px; border-radius:13px; font-size:13px; line-height:1.65; }
+  .msg.bot  .bub { background:var(--surface); border:1px solid var(--border); border-bottom-left-radius:3px; }
+  .msg.user .bub { background:linear-gradient(135deg,var(--accent2),var(--accent)); border-bottom-right-radius:3px; color:#fff; }
+
+  /* Follow-up bubble */
+  .bub.follow-up {
+    background: linear-gradient(135deg, rgba(192,38,211,0.08), rgba(167,139,250,0.08));
+    border-color: rgba(167,139,250,0.3);
+    color: var(--violet);
+    font-style: italic;
+    font-size: 12px;
+  }
+
+  /* Speaking glow on bot bubble */
+  .bub.speaking {
+    border-color: rgba(0,255,153,0.4);
+    box-shadow: 0 0 16px rgba(0,255,153,0.15);
+    transition: all 0.3s;
+  }
+
+  .dots { display:flex; gap:5px; align-items:center; padding:4px 0; }
+  .dots span { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:boing 1.2s ease-in-out infinite; }
+  .dots span:nth-child(2){animation-delay:.2s} .dots span:nth-child(3){animation-delay:.4s}
+  @keyframes boing { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-5px);opacity:1} }
+
+  /* Cards */
+  .rh { font-family:var(--font-head); font-size:14px; font-weight:700; margin:8px 0 6px; display:flex; align-items:center; gap:7px; }
+  .cnt { background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:2px 9px; font-size:11px; color:var(--text-muted); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:9px; margin-bottom:8px; }
+  .card {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:11px; padding:13px; transition:all .18s; position:relative; overflow:hidden;
+  }
+  .card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,var(--accent2),var(--accent)); opacity:0; transition:opacity .2s;
+  }
+  .card:hover { border-color:var(--accent2); transform:translateY(-2px); }
+  .card:hover::before { opacity:1; }
+  .card.filtered-hide { display:none; }
+  .ch { display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:6px; }
+  .cname { font-family:var(--font-head); font-size:13px; font-weight:700; line-height:1.3; }
+  .ctag { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; padding:2px 7px; border-radius:20px; flex-shrink:0; }
+  .ctag.pharmacy       { background:rgba(0,198,255,.15); color:var(--accent); }
+  .ctag.hospital       { background:rgba(255,71,87,.15);  color:var(--red); }
+  .ctag.private-hospital { background:rgba(167,139,250,.18); color:var(--violet); }
+  .ctag.ngo            { background:rgba(0,255,153,.15);  color:var(--accent3); }
+  .ctag.polyclinic     { background:rgba(255,211,42,.15); color:var(--gold); }
+  .crat  { font-size:11px; color:var(--gold); }
+  .caddr { font-size:11px; color:var(--text-muted); margin-top:5px; line-height:1.4; }
+  .cdist { font-size:11px; font-weight:700; color:var(--accent3); margin-top:5px; }
+  .otag { display:inline-block; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; margin-top:4px; }
+  .otag.open   { background:rgba(0,255,153,.15); color:var(--accent3); }
+  .otag.closed { background:rgba(255,71,87,.15);  color:var(--red); }
+  .otag.unk    { background:rgba(107,138,184,.12);color:var(--text-muted); }
+  .bdg-row { display:flex; gap:5px; margin-top:5px; flex-wrap:wrap; }
+  .bdg { font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; }
+  .bdg.gmb{background:rgba(0,102,255,.15);color:#7ab4ff}
+  .bdg.web{background:rgba(0,255,153,.12);color:var(--accent3)}
+  .bdg.now{background:rgba(107,138,184,.1);color:var(--text-muted)}
+  .bdg.ph {background:rgba(255,211,42,.1);color:var(--gold)}
+  .cacts { display:flex; gap:5px; margin-top:9px; flex-wrap:wrap; }
+  .cbtn {
+    padding:5px 9px; background:var(--surface); border:1px solid var(--border);
+    border-radius:6px; font-size:11px; color:var(--text-muted);
+    cursor:pointer; transition:all .15s; text-decoration:none; display:inline-block;
+  }
+  .cbtn:hover { background:var(--surface2); color:var(--accent); border-color:var(--accent2); }
+  .cbtn.pri { background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#fff; border:none; }
+  .cbtn.pri:hover { opacity:.9; }
+  .cbtn.excel { background:rgba(0,255,153,.1); border-color:rgba(0,255,153,.3); color:var(--accent3); }
+  .cbtn.excel:hover { background:rgba(0,255,153,.2); }
+  .ibox {
+    background:linear-gradient(135deg,rgba(0,102,255,.08),rgba(0,198,255,.04));
+    border:1px solid rgba(0,102,255,.25); border-radius:10px; padding:12px; margin-top:8px;
+  }
+  .ibox-lbl { font-size:9px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .ibox p { font-size:12px; color:var(--text-muted); line-height:1.55; }
+  .mapwrap { border-radius:11px; overflow:hidden; border:1px solid var(--border); margin-top:10px; height:200px; }
+  .mapwrap iframe { width:100%; height:100%; border:none; display:block; }
+
+  /* Excel download bar */
+  .excel-bar {
+    display:flex; align-items:center; justify-content:space-between;
+    background:rgba(0,255,153,.05); border:1px solid rgba(0,255,153,.2);
+    border-radius:9px; padding:8px 12px; margin-top:10px; gap:10px;
+  }
+  .excel-bar span { font-size:12px; color:var(--text-muted); }
+  .excel-dl-btn {
+    padding:5px 14px; background:rgba(0,255,153,.15); border:1px solid rgba(0,255,153,.3);
+    border-radius:7px; color:var(--accent3); font-size:12px; font-weight:700;
+    cursor:pointer; transition:all .2s; white-space:nowrap;
+  }
+  .excel-dl-btn:hover { background:rgba(0,255,153,.25); }
+
+  /* ── Input Area ── */
+  .input-area {
+    padding:10px 18px 14px;
+    background:rgba(11,17,32,0.97);
+    border-top:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .irow {
+    display:flex; gap:8px; align-items:flex-end;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:13px; padding:9px 11px; transition:border-color .2s;
+  }
+  .irow:focus-within { border-color:var(--accent2); }
+  #inp {
+    flex:1; background:none; border:none; outline:none;
+    color:var(--text); font-family:var(--font-body); font-size:13px;
+    resize:none; max-height:90px; line-height:1.5; min-height:20px;
+  }
+  #inp::placeholder { color:var(--text-muted); }
+
+  .mic-btn {
+    width:34px; height:34px; flex-shrink:0;
+    background: var(--surface2);
+    border:1px solid var(--border); border-radius:9px; color:var(--text-muted);
+    cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; position:relative;
+  }
+  .mic-btn:hover { border-color:var(--violet); color:var(--violet); }
+  .mic-btn.listening {
+    background: rgba(167,139,250,0.15);
+    border-color: var(--violet); color: var(--violet);
+    box-shadow: 0 0 0 0 rgba(167,139,250,0.6);
+    animation: micpulse 1s ease-out infinite;
+  }
+  @keyframes micpulse {
+    0%   { box-shadow: 0 0 0 0 rgba(167,139,250,0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(167,139,250,0); }
+    100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
+  }
+
+  .spk-btn {
+    width:34px; height:34px; flex-shrink:0;
+    background: var(--surface2); border:1px solid var(--border); border-radius:9px;
+    cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; color:var(--text-muted);
+  }
+  .spk-btn:hover { border-color:var(--accent3); color:var(--accent3); }
+  .spk-btn.active { background:rgba(0,255,153,0.1); border-color:var(--accent3); color:var(--accent3); }
+  .spk-btn.muted  { color:var(--text-muted); opacity:.5; }
+
+  .sbtn {
+    width:34px; height:34px; flex-shrink:0;
+    background:linear-gradient(135deg,var(--accent2),var(--accent));
+    border:none; border-radius:9px; color:#fff; font-size:15px;
+    cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 14px rgba(0,102,255,.35);
+  }
+  .sbtn:hover { transform:scale(1.07); }
+  .sbtn:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+
+  .hints { display:flex; gap:5px; margin-top:7px; flex-wrap:wrap; }
+  .hc {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:20px; padding:3px 9px;
+    font-size:11px; color:var(--text-muted); cursor:pointer; transition:all .15s;
+  }
+  .hc:hover { border-color:var(--accent2); color:var(--accent); }
+
+  .voice-chip {
+    display:inline-flex; align-items:center; gap:4px;
+    background:rgba(167,139,250,.08); border:1px solid rgba(167,139,250,.2);
+    border-radius:20px; padding:3px 9px; font-size:10px; color:var(--violet);
+    cursor:pointer; transition:all .15s;
+  }
+  .voice-chip:hover { background:rgba(167,139,250,.15); }
+
+  #toast {
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:9px; padding:8px 18px;
+    font-size:12px; color:var(--text);
+    opacity:0; transition:opacity .3s; z-index:200; pointer-events:none; white-space:nowrap;
+  }
+  #toast.show { opacity:1; }
+
+  /* ── API Key Toggle Slider ── */
+  .config-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 20px 0;
+    background: rgba(17,28,48,0.97);
+    border-bottom: none;
+    position: relative; z-index: 10; flex-shrink: 0;
+  }
+  .config-toggle-btn {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; user-select: none;
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px;
+    transition: all .2s;
+  }
+  .config-toggle-btn:hover { border-color: var(--accent2); color: var(--accent); }
+  .toggle-track {
+    width: 28px; height: 15px; border-radius: 8px;
+    background: var(--border); position: relative; transition: background .25s;
+    flex-shrink: 0;
+  }
+  .toggle-track.on { background: var(--accent2); }
+  .toggle-thumb {
+    position: absolute; top: 2px; left: 2px;
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #fff; transition: transform .25s;
+  }
+  .toggle-track.on .toggle-thumb { transform: translateX(13px); }
+
+  /* ── Polyclinic Specialty Filter Dropdown ── */
+  .poly-filter-wrap {
+    display: none; align-items: center; gap: 8px;
+    flex-wrap: wrap; padding: 5px 0 0;
+    border-top: 1px solid rgba(255,211,42,0.15);
+    margin-top: 4px; width: 100%;
+  }
+  .poly-filter-wrap.visible { display: flex; }
+  .poly-filter-wrap label { font-size:10px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:.8px; white-space:nowrap; }
+  .poly-chip {
+    padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;
+    cursor: pointer; border: 1px solid rgba(255,211,42,0.25); background: rgba(255,211,42,0.05);
+    color: var(--gold); transition: all .18s; white-space: nowrap;
+  }
+  .poly-chip:hover { background: rgba(255,211,42,.18); border-color: var(--gold); }
+  .poly-chip.active { background: rgba(255,211,42,.22); border-color: var(--gold); box-shadow: 0 0 8px rgba(255,211,42,.2); }
+
+  @media(max-width:680px){
+    .sidebar{display:none;}
+    .api-input{max-width:100%;}
+  }
+
+  /* ══════════════════════════════════════
+     LEFT FULL-BODY AVATAR PANEL
+     ══════════════════════════════════════ */
+  #avatar-left-panel {
+    width: 35%; flex-shrink: 0;
+    background: linear-gradient(180deg, rgba(11,17,32,0.98) 0%, rgba(4,7,15,0.95) 100%);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: relative; z-index: 6;
+    overflow: hidden;
+  }
+  #avatar-left-panel::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 30%, rgba(0,102,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  #avatar-left-header {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 10px; flex-shrink: 0;
+    border-bottom: 1px solid rgba(0,198,255,0.12);
+    background: rgba(0,198,255,0.04);
+  }
+  #avatar-left-body {
+    flex: 1; display: flex; align-items: flex-end; justify-content: center;
+    padding: 0 8px; overflow: hidden; position: relative;
+  }
+
+  /* ── Healthcare background scene ── */
+  #av-bg-scene {
+    position: absolute; inset: 0;
+    pointer-events: none; overflow: hidden;
+  }
+  /* Floating pill animation */
+  @keyframes floatPill {
+    0%,100% { transform: translateY(0px) rotate(var(--pr,0deg)); opacity: 0.18; }
+    50%      { transform: translateY(-14px) rotate(var(--pr,0deg)); opacity: 0.28; }
+  }
+  /* DNA strand drift */
+  @keyframes dnaDrift {
+    0%,100% { transform: translateX(0) scaleY(1); }
+    50%      { transform: translateX(4px) scaleY(1.06); }
+  }
+  /* ECG pulse travel */
+  @keyframes ecgPulse {
+    0%   { stroke-dashoffset: 400; opacity: 0; }
+    10%  { opacity: 0.55; }
+    90%  { opacity: 0.55; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+  }
+  /* Cross glow throb */
+  @keyframes crossGlow {
+    0%,100% { opacity: 0.07; filter: blur(0px); }
+    50%      { opacity: 0.13; filter: blur(1px); }
+  }
+  /* Molecule orbit */
+  @keyframes orbit1 {
+    from { transform: rotate(0deg) translateX(18px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(18px) rotate(-360deg); }
+  }
+  @keyframes orbit2 {
+    from { transform: rotate(120deg) translateX(18px) rotate(-120deg); }
+    to   { transform: rotate(480deg) translateX(18px) rotate(-480deg); }
+  }
+  @keyframes orbit3 {
+    from { transform: rotate(240deg) translateX(18px) rotate(-240deg); }
+    to   { transform: rotate(600deg) translateX(18px) rotate(-600deg); }
+  }
+  /* Particle float */
+  @keyframes particleRise {
+    0%   { transform: translateY(0) scale(1);   opacity: 0; }
+    20%  { opacity: 0.35; }
+    80%  { opacity: 0.2; }
+    100% { transform: translateY(-120px) scale(0.4); opacity: 0; }
+  }
+  .av-particle {
+    position: absolute; border-radius: 50%;
+    background: var(--accent); opacity: 0;
+    animation: particleRise var(--dur,6s) ease-in-out var(--delay,0s) infinite;
+  }
+  #avatar-left-status {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 10px; flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 10px; color: var(--text-muted);
+  }
+  #avatar-left-status-text { flex: 1; font-size: 10px; }
+  #avatar-svg { cursor: default; user-select: none; }
+
+  /* Speaking wave animation */
+  .av-swave {
+    animation: avWave 0.5s ease-in-out infinite;
+  }
+  .av-swave:nth-child(1){animation-delay:0s}
+  .av-swave:nth-child(2){animation-delay:0.07s}
+  .av-swave:nth-child(3){animation-delay:0.14s}
+  .av-swave:nth-child(4){animation-delay:0.07s}
+  .av-swave:nth-child(5){animation-delay:0s}
+  .av-swave:nth-child(6){animation-delay:0.10s}
+  .av-swave:nth-child(7){animation-delay:0.18s}
+  .av-swave:nth-child(8){animation-delay:0.06s}
+  @keyframes avWave {
+    0%,100%{transform:scaleY(0.5);opacity:0.5}
+    50%{transform:scaleY(1.5);opacity:1}
+  }
+
+  /* ══════════════════════════════════════
+     ANAM.AI AVATAR PANEL STYLES
+     ══════════════════════════════════════ */
+  #avatar-panel {
+    position: fixed; bottom: 110px; right: 20px;
+    width: 240px;
+    background: rgba(11,17,32,0.97);
+    border: 1px solid var(--border);
+    border-radius: 18px; overflow: hidden;
+    box-shadow: 0 0 40px rgba(0,102,255,0.25), 0 8px 32px rgba(0,0,0,0.6);
+    z-index: 9000; display: none !important; flex-direction: column;
+    transition: all 0.3s ease;
+  }
+  #avatar-panel.visible { display: flex; }
+  #avatar-panel.minimized #avatar-video-wrap,
+  #avatar-panel.minimized #avatar-status-bar { display: none; }
+
+  #avatar-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 12px; flex-shrink: 0;
+    background: linear-gradient(135deg,rgba(0,102,255,0.18),rgba(0,198,255,0.10));
+    border-bottom: 1px solid var(--border);
+  }
+  .avp-left { display:flex; align-items:center; gap:7px; }
+  .avp-live-dot {
+    width:7px; height:7px; border-radius:50%;
+    background:var(--accent3); animation:pulse 2s ease-in-out infinite; flex-shrink:0;
+  }
+  .avp-label {
+    font-family:var(--font-head); font-size:12px; font-weight:700;
+    background:linear-gradient(90deg,var(--accent),var(--accent3));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .avp-btns { display:flex; gap:5px; }
+  .avp-btn {
+    width:22px; height:22px; border-radius:6px;
+    background:var(--surface2); border:1px solid var(--border);
+    color:var(--text-muted); font-size:11px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:all .15s;
+  }
+  .avp-btn:hover { border-color:var(--accent2); color:var(--accent); }
+
+  #avatar-video-wrap {
+    position:relative; width:100%; aspect-ratio:3/4;
+    background:#000; overflow:hidden; flex-shrink:0;
+  }
+  #avatar-video { width:100%; height:100%; object-fit:cover; display:block; }
+  #avatar-overlay {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(4,7,15,0.88); transition:opacity 0.4s; padding:14px; text-align:center;
+  }
+  #avatar-overlay.hidden { opacity:0; pointer-events:none; }
+  .avp-spinner {
+    width:30px; height:30px; border-radius:50%;
+    border:3px solid var(--border); border-top-color:var(--accent);
+    animation:spin 0.8s linear infinite; margin-bottom:10px; flex-shrink:0;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #avatar-overlay-text { font-size:11px; color:var(--text-muted); line-height:1.5; }
+
+  #avatar-status-bar {
+    padding:7px 12px; display:flex; align-items:center; gap:7px;
+    border-top:1px solid var(--border); background:var(--surface);
+    font-size:11px; color:var(--text-muted); flex-shrink:0;
+  }
+  #avatar-status-text { flex:1; }
+
+  /* Avatar button in header */
+  #avt-toggle-btn {
+    display:flex; align-items:center; gap:6px;
+    padding:5px 11px; border-radius:30px;
+    background:var(--surface2); border:1px solid var(--border);
+    font-size:11px; color:var(--text-muted);
+    cursor:pointer; transition:all .18s; font-family:var(--font-body);
+  }
+  #avt-toggle-btn:hover { border-color:var(--accent2); color:var(--accent); }
+  #avt-toggle-btn.active {
+    background:rgba(0,102,255,0.15); border-color:var(--accent2); color:var(--accent);
+    box-shadow:0 0 12px rgba(0,102,255,0.2);
+  }
+  .avt-dot { width:6px; height:6px; border-radius:50%; background:var(--text-muted); flex-shrink:0; }
+  #avt-toggle-btn.active .avt-dot { background:var(--accent3); animation:pulse 2s infinite; }
+
+  /* ══════════════════════════════════════
+     EXOTEL OUTBOUND CALL PANEL STYLES
+     ══════════════════════════════════════ */
+  #call-fab {
+    position: fixed; bottom: 24px; right: 24px; z-index: 8000;
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, #00c853, #00e676);
+    border: none; cursor: pointer; box-shadow: 0 4px 24px rgba(0,200,83,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; transition: all 0.2s;
+    animation: fabPulse 2.5s ease-in-out infinite;
+  }
+  #call-fab:hover { transform: scale(1.1); box-shadow: 0 6px 30px rgba(0,200,83,0.7); }
+  #call-fab.active { background: linear-gradient(135deg, #ff4757, #ff6b81); animation: none; }
+  @keyframes fabPulse {
+    0%,100%{box-shadow:0 4px 24px rgba(0,200,83,0.5)}
+    50%{box-shadow:0 4px 36px rgba(0,200,83,0.85),0 0 0 8px rgba(0,200,83,0.12)}
+  }
+
+  #call-panel {
+    position: fixed; bottom: 88px; right: 20px; z-index: 7999;
+    width: 340px;
+    background: rgba(11,17,32,0.98);
+    border: 1px solid rgba(0,200,83,0.3);
+    border-radius: 20px;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,200,83,0.1);
+    display: none; flex-direction: column; overflow: hidden;
+    backdrop-filter: blur(12px);
+    transform: translateY(12px); opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.34,1.20,0.64,1), opacity 0.25s ease;
+  }
+  #call-panel.visible {
+    display: flex; transform: translateY(0); opacity: 1;
+  }
+
+  .cp-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px;
+    background: linear-gradient(135deg,rgba(0,200,83,0.15),rgba(0,102,255,0.10));
+    border-bottom: 1px solid rgba(0,200,83,0.2);
+  }
+  .cp-title {
+    font-family: var(--font-head); font-size: 13px; font-weight: 800;
+    background: linear-gradient(90deg, #00e676, var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .cp-close {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 16px; cursor: pointer; padding: 0; line-height: 1;
+    transition: color 0.15s;
+  }
+  .cp-close:hover { color: var(--red); }
+
+  .cp-tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+  }
+  .cp-tab {
+    flex: 1; padding: 9px 0; font-size: 11px; font-weight: 700;
+    text-align: center; cursor: pointer; color: var(--text-muted);
+    border: none; background: none; transition: all 0.18s;
+    letter-spacing: 0.4px;
+  }
+  .cp-tab.active {
+    color: #00e676;
+    box-shadow: inset 0 -2px 0 #00e676;
+  }
+  .cp-tab:hover:not(.active) { color: var(--text); }
+
+  .cp-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 11px; }
+
+  .cp-label {
+    font-size: 10px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px;
+  }
+  .cp-input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 9px; padding: 9px 12px; color: var(--text);
+    font-size: 13px; font-family: var(--font-body); outline: none;
+    transition: border-color 0.2s;
+  }
+  .cp-input:focus { border-color: #00e676; }
+  .cp-input::placeholder { color: var(--text-muted); }
+
+  .cp-textarea {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 9px; padding: 9px 12px; color: var(--text);
+    font-size: 12px; font-family: var(--font-body); outline: none;
+    resize: none; height: 72px; transition: border-color 0.2s; line-height: 1.5;
+  }
+  .cp-textarea:focus { border-color: #00e676; }
+  .cp-textarea::placeholder { color: var(--text-muted); }
+
+  .cp-call-btn {
+    width: 100%; padding: 11px; border: none; border-radius: 10px;
+    background: linear-gradient(135deg, #00c853, #00e676);
+    color: #fff; font-size: 13px; font-weight: 700;
+    font-family: var(--font-head); cursor: pointer; letter-spacing: 0.5px;
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .cp-call-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .cp-call-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .cp-call-btn.calling {
+    background: linear-gradient(135deg, #ff4757, #ff6b81);
+    animation: callPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes callPulse {
+    0%,100%{box-shadow:0 0 0 0 rgba(255,71,87,0.4)}
+    50%{box-shadow:0 0 0 8px rgba(255,71,87,0)}
+  }
+
+  .cp-status {
+    font-size: 11px; padding: 8px 11px; border-radius: 8px;
+    background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.2);
+    color: #00e676; display: none; align-items: center; gap: 7px;
+    line-height: 1.4;
+  }
+  .cp-status.visible { display: flex; }
+  .cp-status.error { background: rgba(255,71,87,0.08); border-color: rgba(255,71,87,0.2); color: var(--red); }
+  .cp-status.warning { background: rgba(255,211,42,0.08); border-color: rgba(255,211,42,0.2); color: var(--gold); }
+  .cp-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; animation: pulse 1.5s infinite; }
+
+  .cp-divider { height: 1px; background: var(--border); margin: 2px 0; }
+
+  /* Bulk tab */
+  .cp-bulk-area {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 9px; padding: 10px 12px;
+    font-size: 11px; color: var(--text-muted); line-height: 1.6;
+  }
+  .cp-bulk-nums {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 9px; padding: 9px 12px; color: var(--text);
+    font-size: 12px; font-family: monospace; outline: none;
+    resize: none; height: 90px; transition: border-color 0.2s; line-height: 1.5;
+  }
+  .cp-bulk-nums:focus { border-color: #00e676; }
+  .cp-bulk-nums::placeholder { color: var(--text-muted); font-family: var(--font-body); }
+
+  .cp-bulk-progress {
+    display: none; flex-direction: column; gap: 5px;
+  }
+  .cp-bulk-progress.visible { display: flex; }
+  .cp-progress-bar-wrap {
+    height: 4px; background: var(--border); border-radius: 4px; overflow: hidden;
+  }
+  .cp-progress-bar {
+    height: 100%; background: linear-gradient(90deg, #00c853, #00e676);
+    border-radius: 4px; transition: width 0.4s ease; width: 0%;
+  }
+  .cp-progress-label { font-size: 10px; color: var(--text-muted); text-align: center; }
+
+  /* Log tab */
+  .cp-log {
+    height: 160px; overflow-y: auto; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 9px;
+    padding: 8px 10px; font-size: 11px; font-family: monospace; line-height: 1.7;
+  }
+  .cp-log::-webkit-scrollbar { width: 3px; }
+  .cp-log::-webkit-scrollbar-thumb { background: var(--border); }
+  .log-line { display: flex; gap: 6px; align-items: flex-start; }
+  .log-line .log-ts { color: var(--text-muted); flex-shrink: 0; font-size: 10px; }
+  .log-line .log-ok  { color: #00e676; }
+  .log-line .log-err { color: var(--red); }
+  .log-line .log-info{ color: var(--accent); }
+
+  .cp-clear-log {
+    background: none; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text-muted); font-size: 10px; padding: 4px 10px; cursor: pointer;
+    transition: all 0.15s; align-self: flex-end;
+  }
+  .cp-clear-log:hover { border-color: var(--red); color: var(--red); }
+
+  /* Call tooltip on FAB */
+  .call-fab-tip {
+    position: fixed; bottom: 86px; right: 20px; z-index: 7998;
+    background: rgba(11,17,32,0.95); border: 1px solid rgba(0,200,83,0.35);
+    border-radius: 10px; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    color: #00e676; white-space: nowrap; pointer-events: none;
+    opacity: 0; transform: translateX(8px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  #call-fab:hover + .call-fab-tip { opacity: 1; transform: translateX(0); }
+</style>
+
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SPLASH / INTRO SCREEN
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+  #splash {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #04070f;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow: hidden;
+    transition: opacity 0.7s ease, visibility 0.7s ease;
+  }
+  #splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  #splash::before, #splash::after {
+    content: ''; position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+  }
+  #splash::before {
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(0,102,255,0.18) 0%, transparent 70%);
+    top: -120px; left: -100px;
+    animation: blobDrift1 8s ease-in-out infinite alternate;
+  }
+  #splash::after {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(0,198,255,0.12) 0%, transparent 70%);
+    bottom: -80px; right: -60px;
+    animation: blobDrift2 7s ease-in-out infinite alternate;
+  }
+  @keyframes blobDrift1 { from{transform:translate(0,0)} to{transform:translate(40px,30px)} }
+  @keyframes blobDrift2 { from{transform:translate(0,0)} to{transform:translate(-30px,-20px)} }
+
+  .splash-icon-wrap {
+    position: relative; margin-bottom: 32px;
+    opacity: 0; transform: scale(0.4);
+    animation: splashIconIn 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards;
+  }
+  @keyframes splashIconIn { to { opacity: 1; transform: scale(1); } }
+
+  .splash-icon {
+    width: 88px; height: 88px; border-radius: 24px;
+    background: linear-gradient(135deg, #0066ff, #00c6ff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px;
+    box-shadow: 0 0 0 0 rgba(0,198,255,0.5);
+    animation: splashPulseRing 2s ease-out 1.2s infinite;
+  }
+  @keyframes splashPulseRing {
+    0%  { box-shadow: 0 0 0 0   rgba(0,198,255,0.45); }
+    70% { box-shadow: 0 0 0 22px rgba(0,198,255,0);   }
+    100%{ box-shadow: 0 0 0 0   rgba(0,198,255,0);    }
+  }
+  .splash-orbit {
+    position: absolute; inset: -14px; border-radius: 50%;
+    border: 1.5px dashed rgba(0,198,255,0.25);
+    animation: orbit 4s linear infinite;
+  }
+  .splash-orbit::after {
+    content: ''; position: absolute; top: 4px; left: 50%;
+    transform: translateX(-50%);
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #00c6ff; box-shadow: 0 0 8px #00c6ff;
+  }
+  @keyframes orbit { to { transform: rotate(360deg); } }
+
+  .splash-text { text-align: center; position: relative; z-index: 1; }
+
+  .splash-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 7vw, 58px);
+    font-weight: 800; letter-spacing: 0.04em;
+    background: linear-gradient(90deg, #00c6ff, #00ff99, #0066ff, #00c6ff);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    opacity: 0; transform: translateY(18px);
+    animation: splashTitleIn 0.7s ease 0.9s forwards, gradShift 3s ease 1.6s infinite;
+  }
+  @keyframes splashTitleIn { to { opacity: 1; transform: translateY(0); } }
+  @keyframes gradShift {
+    0%,100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+
+  .splash-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(11px, 2.5vw, 15px);
+    font-weight: 400; letter-spacing: 0.22em;
+    text-transform: uppercase; color: #6b8ab8;
+    margin-top: 10px;
+    opacity: 0; transform: translateY(12px);
+    animation: splashSubIn 0.6s ease 1.3s forwards;
+  }
+  @keyframes splashSubIn { to { opacity: 1; transform: translateY(0); } }
+
+  .splash-line {
+    width: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, #00c6ff, transparent);
+    margin: 18px auto;
+    animation: splashLineGrow 0.8s ease 1.6s forwards;
+  }
+  @keyframes splashLineGrow { to { width: min(340px, 80vw); } }
+
+  .splash-tagline {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(11px, 2vw, 13px);
+    color: #a78bfa; letter-spacing: 0.06em;
+    opacity: 0; transform: translateY(8px);
+    animation: splashFadeUp 0.6s ease 2.1s forwards;
+  }
+  @keyframes splashFadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  .splash-progress-wrap {
+    margin-top: 48px; width: min(280px, 72vw);
+    opacity: 0; animation: splashFadeUp 0.5s ease 2.3s forwards;
+  }
+  .splash-progress-track {
+    height: 3px; background: rgba(255,255,255,0.07);
+    border-radius: 10px; overflow: hidden;
+  }
+  .splash-progress-bar {
+    height: 100%; width: 0%; border-radius: 10px;
+    background: linear-gradient(90deg, #0066ff, #00c6ff, #00ff99);
+    animation: splashLoad 2s cubic-bezier(0.4,0,0.2,1) 2.4s forwards;
+  }
+  @keyframes splashLoad { to { width: 100%; } }
+  .splash-progress-label {
+    margin-top: 10px; text-align: center;
+    font-size: 11px; color: #3a5070; letter-spacing: 0.1em;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .splash-badge {
+    margin-top: 36px;
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(11,17,32,0.7);
+    border: 1px solid rgba(30,48,80,0.8);
+    border-radius: 30px; padding: 6px 16px;
+    opacity: 0; animation: splashFadeUp 0.5s ease 2.5s forwards;
+  }
+  .splash-badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #00ff99;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .splash-badge-text {
+    font-size: 11px; color: #6b8ab8;
+    font-family: 'DM Sans', sans-serif; letter-spacing: 0.05em;
+  }
+</style>
+
+<div id="splash">
+  <div class="splash-icon-wrap">
+    <div class="splash-orbit"></div>
+    <div class="splash-icon">&#x1F3E5;</div>
+  </div>
+  <div class="splash-text">
+    <div class="splash-title">Govinda AI</div>
+    <div class="splash-sub">Healthcare Infrastructure Bot</div>
+    <div class="splash-line"></div>
+    <div class="splash-tagline">Powered by RKJ Labs &middot; Sector 9, Noida</div>
+  </div>
+  <div class="splash-progress-wrap">
+    <div class="splash-progress-track">
+      <div class="splash-progress-bar"></div>
+    </div>
+    <div class="splash-progress-label">Initialising your healthcare assistant&hellip;</div>
+  </div>
+  <div class="splash-badge">
+    <div class="splash-badge-dot"></div>
+    <span class="splash-badge-text">XpertNote Analytics</span>
+  </div>
+</div>
+
+<script>
+  setTimeout(function() {
+    var splash = document.getElementById('splash');
+    if (splash) {
+      splash.classList.add('hidden');
+      setTimeout(function(){ splash.remove(); }, 750);
+    }
+  }, 4700);
+</script>
+
+<!-- Header -->
+<header>
+  <div class="logo-group">
+    <div class="logo-icon">🏥</div>
+    <div>
+      <div class="logo-text">Govinda AI</div>
+      <div class="logo-sub">Healthcare Infrastructure Bot</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-loc">
+      <span class="live-dot"></span> RKJ Labs · Sector 9, Noida
+    </div>
+    <button id="avt-toggle-btn" onclick="toggleAvatarPanel()">
+      <div class="avt-dot"></div> Avatar
+    </button>
+  </div>
+</header>
+
+<!-- Voice Status Bar -->
+<div id="voice-bar">
+  <div class="vbar-left">
+    <span class="vbar-icon" id="vbar-icon">🎙️</span>
+    <span class="vbar-text" id="vbar-text">Listening…</span>
+    <div class="waveform" id="vbar-wave">
+      <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+      <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+      <div class="wbar"></div>
+    </div>
+  </div>
+  <button onclick="stopAll()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;">✕ Stop</button>
+</div>
+
+<!-- Config Toggle Row -->
+<div class="config-toggle-row" id="config-toggle-row">
+  <div style="font-size:11px;color:var(--text-muted);font-weight:600;letter-spacing:.5px;">⚙️ API Configuration</div>
+  <div class="config-toggle-btn" onclick="toggleConfigPanel()" id="cfg-toggle-btn">
+    <div class="toggle-track on" id="cfg-toggle-track"><div class="toggle-thumb"></div></div>
+    <span id="cfg-toggle-label">Hide Keys</span>
+  </div>
+</div>
+
+<!-- Config Panel -->
+<div id="config-panel">
+  <label>Gemini Key</label>
+  <input class="api-input" type="password" id="gkey" placeholder="AIza… (Gemini API)">
+  <label>Maps Key</label>
+  <input class="api-input" type="password" id="mkey" placeholder="AIza… (Maps JavaScript API)">
+  <label style="color:var(--accent);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;">🤖 Anam Key</label>
+  <input class="api-input" type="password" id="anam-key-input" placeholder="Anam API key (lab.anam.ai)" style="border-color:rgba(0,198,255,0.35);min-width:200px">
+  <button class="apply-btn" onclick="applyConfig()">✓ Apply</button>
+</div>
+
+
+
+// Strategy 1: Local Flask backend (python app.py) — no CORS, most reliable
+    {
+      name: 'Local backend (app.py)',
+      fn: async () => {
+        // 👇 THIS IS THE EXACT LINE CONNECTING TO YOUR PYTHON APP 👇
+        const res = await fetch('http://localhost:5000/call', {
+          method : 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body   : bodyStr,
+        });
+        return res;
+      }
+    },
+
+<!-- Filter Bar -->
+<div id="filter-bar">
+  <label>🔽 Filter:</label>
+  <div class="rad-wrap" style="margin-right:4px;">
+    <label style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;">📏 Radius</label>
+    <input type="range" id="rslider" min="500" max="10000" step="500" value="2000">
+    <div id="rad-lbl">2 km</div>
+  </div>
+  <div class="filter-sep"></div>
+  <button class="filter-chip" id="f-open" onclick="toggleFilter('open')">✅ Open Now</button>
+  <button class="filter-chip" id="f-r4" onclick="toggleFilter('r4')">⭐ 4+ Stars</button>
+  <button class="filter-chip" id="f-r3" onclick="toggleFilter('r3')">⭐ 3+ Stars</button>
+  <div class="filter-sep"></div>
+  <label>Type:</label>
+  <button class="filter-chip" id="f-pharmacy" onclick="toggleFilter('pharmacy')">💊 Pharmacy</button>
+  <button class="filter-chip" id="f-hospital" onclick="toggleFilter('hospital')">🏥 Govt. Hospital</button>
+  <button class="filter-chip" id="f-private-hospital" onclick="toggleFilter('private-hospital')">🏨 Private Hospital</button>
+  <button class="filter-chip" id="f-ngo" onclick="toggleFilter('ngo')">🤝 NGO</button>
+  <button class="filter-chip" id="f-polyclinic" onclick="toggleFilter('polyclinic'); togglePolyFilter()">🩺 Polyclinic</button>
+  <div class="filter-sep"></div>
+  <button class="clear-filter" onclick="clearFilters()">✕ Clear Filters</button>
+  <!-- Polyclinic specialty sub-filter -->
+  <div class="poly-filter-wrap" id="poly-filter-wrap">
+    <label>🩺 Specialty:</label>
+    <button class="poly-chip" id="ps-all" onclick="setPolySpec('all')" style="border-color:var(--gold);background:rgba(255,211,42,.12)">All Types</button>
+    <button class="poly-chip" id="ps-dental" onclick="setPolySpec('dental')">🦷 Dental</button>
+    <button class="poly-chip" id="ps-pediatric" onclick="setPolySpec('pediatric')">👶 Pediatric</button>
+    <button class="poly-chip" id="ps-dermatology" onclick="setPolySpec('dermatology')">🧴 Dermatology</button>
+    <button class="poly-chip" id="ps-womens" onclick="setPolySpec('womens')">🌸 Women's Health</button>
+    <button class="poly-chip" id="ps-orthopedic" onclick="setPolySpec('orthopedic')">🦴 Orthopedic</button>
+    <button class="poly-chip" id="ps-ent" onclick="setPolySpec('ent')">👂 ENT</button>
+    <button class="poly-chip" id="ps-mental" onclick="setPolySpec('mental')">🧠 Mental Health</button>
+    <button class="poly-chip" id="ps-sexual" onclick="setPolySpec('sexual')">❤️ Sexual Health</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- ══════════════════════════════════
+       FULL-BODY MALE AVATAR PANEL (LEFT)
+       ══════════════════════════════════ -->
+  <div id="avatar-left-panel">
+    <div id="avatar-left-header">
+      <div class="avp-live-dot" style="background:var(--accent3)"></div>
+      <span style="font-family:var(--font-head);font-size:11px;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Govinda AI</span>
+    </div>
+    <div id="avatar-left-body">
+      <!-- ═══════════════════════════════════════
+           HEALTHCARE BACKGROUND SCENE
+           ═══════════════════════════════════════ -->
+      <div id="av-bg-scene">
+        <!-- Main background SVG: hospital cross, ECG, DNA, molecules, pills -->
+        <svg viewBox="0 0 300 520" xmlns="http://www.w3.org/2000/svg"
+             style="position:absolute;inset:0;width:100%;height:100%;">
+          <defs>
+            <!-- Radial deep glow at centre -->
+            <radialGradient id="bgCentre" cx="50%" cy="55%" r="55%">
+              <stop offset="0%"   stop-color="#003080" stop-opacity="0.28"/>
+              <stop offset="100%" stop-color="#04070f"  stop-opacity="0"/>
+            </radialGradient>
+            <!-- Subtle teal floor -->
+            <radialGradient id="bgFloor" cx="50%" cy="100%" r="50%">
+              <stop offset="0%"   stop-color="#00c6ff" stop-opacity="0.09"/>
+              <stop offset="100%" stop-color="#04070f"  stop-opacity="0"/>
+            </radialGradient>
+            <!-- ECG dash pattern -->
+            <style>
+              .ecg-line {
+                fill:none; stroke:#00ff99; stroke-width:1.4;
+                stroke-dasharray:400; stroke-dashoffset:400;
+                stroke-linecap:round;
+                animation: ecgPulse 3.4s ease-in-out infinite;
+              }
+              .ecg-line2 {
+                fill:none; stroke:#00c6ff; stroke-width:1;
+                stroke-dasharray:300; stroke-dashoffset:300;
+                stroke-linecap:round;
+                animation: ecgPulse 4.1s ease-in-out 1.2s infinite;
+              }
+              .pill-grp { animation: floatPill 4s ease-in-out infinite; }
+              .dna-seg  { animation: dnaDrift 3s ease-in-out infinite alternate; }
+            </style>
+          </defs>
+
+          <!-- Deep background glow blobs -->
+          <ellipse cx="150" cy="280" rx="160" ry="200" fill="url(#bgCentre)"/>
+          <ellipse cx="150" cy="520" rx="140" ry="80"  fill="url(#bgFloor)"/>
+
+          <!-- ── LARGE HOSPITAL CROSS (faint, centred) ── -->
+          <g style="animation:crossGlow 4s ease-in-out infinite;">
+            <rect x="118" y="60" width="64" height="180" rx="8"  fill="rgba(0,102,255,0.10)"/>
+            <rect x="60"  y="118" width="180" height="64" rx="8" fill="rgba(0,102,255,0.10)"/>
+          </g>
+          <!-- Cross outline glow ring -->
+          <rect x="116" y="58"  width="68" height="184" rx="10" fill="none" stroke="rgba(0,198,255,0.07)" stroke-width="1.5"/>
+          <rect x="58"  y="116" width="184" height="68" rx="10" fill="none" stroke="rgba(0,198,255,0.07)" stroke-width="1.5"/>
+
+          <!-- ── ECG / HEARTBEAT LINES ── -->
+          <!-- Bottom band ECG -->
+          <path class="ecg-line"
+            d="M0,420 L30,420 L38,420 L42,390 L48,450 L54,380 L60,445 L66,420 L100,420 L104,420 L108,400 L112,440 L116,410 L120,420 L180,420 L184,420 L188,405 L192,435 L196,415 L200,420 L240,420 L300,420"/>
+          <!-- Mid band ECG (secondary) -->
+          <path class="ecg-line2"
+            d="M0,320 L40,320 L44,320 L48,305 L52,335 L56,300 L60,330 L64,320 L120,320 L124,320 L128,308 L132,332 L136,315 L140,320 L200,320 L300,320"/>
+
+          <!-- ── DNA DOUBLE HELIX (left side) ── -->
+          <g transform="translate(22,100)" class="dna-seg">
+            <!-- Left strand -->
+            <path d="M0,0 Q15,30 0,60 Q-15,90 0,120 Q15,150 0,180 Q-15,210 0,240"
+              fill="none" stroke="rgba(0,198,255,0.30)" stroke-width="2" stroke-linecap="round"/>
+            <!-- Right strand -->
+            <path d="M24,0 Q9,30 24,60 Q39,90 24,120 Q9,150 24,180 Q39,210 24,240"
+              fill="none" stroke="rgba(167,139,250,0.30)" stroke-width="2" stroke-linecap="round"/>
+            <!-- Rungs -->
+            <line x1="0"  y1="30"  x2="24" y2="30"  stroke="rgba(0,255,153,0.22)" stroke-width="1.2"/>
+            <line x1="0"  y1="60"  x2="24" y2="60"  stroke="rgba(0,255,153,0.22)" stroke-width="1.2"/>
+            <line x1="0"  y1="90"  x2="24" y2="90"  stroke="rgba(0,255,153,0.22)" stroke-width="1.2"/>
+            <line x1="0"  y1="120" x2="24" y2="120" stroke="rgba(0,255,153,0.22)" stroke-width="1.2"/>
+            <line x1="0"  y1="150" x2="24" y2="150" stroke="rgba(0,255,153,0.22)" stroke-width="1.2"/>
+            <line x1="0"  y1="180" x2="24" y2="180" stroke="rgba(0,255,153,0.22)" stroke-width="1.2"/>
+            <line x1="0"  y1="210" x2="24" y2="210" stroke="rgba(0,255,153,0.22)" stroke-width="1.2"/>
+            <!-- Rung dots -->
+            <circle cx="0"  cy="30"  r="2.5" fill="rgba(0,198,255,0.45)"/>
+            <circle cx="24" cy="30"  r="2.5" fill="rgba(167,139,250,0.45)"/>
+            <circle cx="0"  cy="90"  r="2.5" fill="rgba(0,198,255,0.45)"/>
+            <circle cx="24" cy="90"  r="2.5" fill="rgba(167,139,250,0.45)"/>
+            <circle cx="0"  cy="150" r="2.5" fill="rgba(0,198,255,0.45)"/>
+            <circle cx="24" cy="150" r="2.5" fill="rgba(167,139,250,0.45)"/>
+            <circle cx="0"  cy="210" r="2.5" fill="rgba(0,198,255,0.45)"/>
+            <circle cx="24" cy="210" r="2.5" fill="rgba(167,139,250,0.45)"/>
+          </g>
+
+          <!-- ── MOLECULE CLUSTER (top-right) ── -->
+          <g transform="translate(248,90)">
+            <!-- Centre atom -->
+            <circle cx="0" cy="0" r="6" fill="rgba(0,198,255,0.25)" stroke="rgba(0,198,255,0.4)" stroke-width="1"/>
+            <!-- Bond lines -->
+            <line x1="0" y1="0" x2="18"  y2="0"   stroke="rgba(0,198,255,0.20)" stroke-width="1"/>
+            <line x1="0" y1="0" x2="-9"  y2="15"  stroke="rgba(0,198,255,0.20)" stroke-width="1"/>
+            <line x1="0" y1="0" x2="-9"  y2="-15" stroke="rgba(0,198,255,0.20)" stroke-width="1"/>
+            <!-- Orbiting atoms -->
+            <circle cx="0" cy="0" r="3" fill="rgba(0,255,153,0.45)"
+              style="animation:orbit1 5s linear infinite; transform-origin:0 0;"/>
+            <circle cx="0" cy="0" r="2.5" fill="rgba(167,139,250,0.50)"
+              style="animation:orbit2 5s linear infinite; transform-origin:0 0;"/>
+            <circle cx="0" cy="0" r="2" fill="rgba(0,198,255,0.55)"
+              style="animation:orbit3 5s linear infinite; transform-origin:0 0;"/>
+            <!-- Satellite atoms -->
+            <circle cx="18"  cy="0"   r="4" fill="rgba(167,139,250,0.22)" stroke="rgba(167,139,250,0.35)" stroke-width="1"/>
+            <circle cx="-9"  cy="15"  r="3.5" fill="rgba(0,255,153,0.22)" stroke="rgba(0,255,153,0.35)" stroke-width="1"/>
+            <circle cx="-9"  cy="-15" r="3"   fill="rgba(0,198,255,0.22)" stroke="rgba(0,198,255,0.35)" stroke-width="1"/>
+          </g>
+
+          <!-- ── PILLS (scattered, floating) ── -->
+          <!-- Pill 1 — top left -->
+          <g class="pill-grp" style="--pr:-25deg;" transform="translate(42,55)">
+            <rect x="-18" y="-7" width="36" height="14" rx="7"
+              fill="none" stroke="rgba(0,198,255,0.28)" stroke-width="1.5"/>
+            <rect x="-18" y="-7" width="18" height="14" rx="7 0 0 7"
+              fill="rgba(0,198,255,0.12)"/>
+            <line x1="0" y1="-7" x2="0" y2="7" stroke="rgba(0,198,255,0.25)" stroke-width="1"/>
+          </g>
+          <!-- Pill 2 — right mid -->
+          <g class="pill-grp" style="--pr:15deg;animation-delay:.8s;" transform="translate(268,210)">
+            <rect x="-14" y="-6" width="28" height="12" rx="6"
+              fill="none" stroke="rgba(255,211,42,0.30)" stroke-width="1.5"/>
+            <rect x="-14" y="-6" width="14" height="12" rx="6 0 0 6"
+              fill="rgba(255,211,42,0.12)"/>
+            <line x1="0" y1="-6" x2="0" y2="6" stroke="rgba(255,211,42,0.25)" stroke-width="1"/>
+          </g>
+          <!-- Pill 3 — bottom right -->
+          <g class="pill-grp" style="--pr:40deg;animation-delay:1.4s;" transform="translate(260,390)">
+            <rect x="-12" y="-5" width="24" height="10" rx="5"
+              fill="none" stroke="rgba(167,139,250,0.30)" stroke-width="1.5"/>
+            <rect x="-12" y="-5" width="12" height="10" rx="5 0 0 5"
+              fill="rgba(167,139,250,0.12)"/>
+          </g>
+          <!-- Capsule 4 — top right area -->
+          <g class="pill-grp" style="--pr:-10deg;animation-delay:2.1s;" transform="translate(230,52)">
+            <rect x="-10" y="-5" width="20" height="10" rx="5"
+              fill="none" stroke="rgba(0,255,153,0.28)" stroke-width="1.5"/>
+            <rect x="0"   y="-5" width="10" height="10" rx="0 5 5 0"
+              fill="rgba(0,255,153,0.10)"/>
+          </g>
+
+          <!-- ── STETHOSCOPE SILHOUETTE (subtle, right side) ── -->
+          <g transform="translate(255,310)" opacity="0.13">
+            <!-- Tube loop -->
+            <path d="M0,0 Q30,0 30,30 Q30,60 0,60 Q-20,60 -20,40"
+              fill="none" stroke="#00c6ff" stroke-width="6" stroke-linecap="round"/>
+            <!-- Earpiece left -->
+            <line x1="0" y1="0" x2="-10" y2="-18" stroke="#00c6ff" stroke-width="4" stroke-linecap="round"/>
+            <!-- Earpiece right -->
+            <line x1="0" y1="0" x2="10" y2="-14" stroke="#00c6ff" stroke-width="4" stroke-linecap="round"/>
+            <!-- Chest piece -->
+            <circle cx="-20" cy="40" r="10" fill="none" stroke="#00c6ff" stroke-width="4"/>
+            <circle cx="-20" cy="40" r="5" fill="rgba(0,198,255,0.3)"/>
+          </g>
+
+          <!-- ── SMALL CROSS ICON (top centre badge) ── -->
+          <g transform="translate(150,28)" opacity="0.45">
+            <rect x="-6" y="-16" width="12" height="32" rx="3" fill="rgba(255,71,87,0.35)"/>
+            <rect x="-16" y="-6" width="32" height="12" rx="3" fill="rgba(255,71,87,0.35)"/>
+            <rect x="-5"  y="-15" width="10" height="30" rx="2" fill="none" stroke="rgba(255,71,87,0.3)" stroke-width="1"/>
+            <rect x="-15" y="-5"  width="30" height="10" rx="2" fill="none" stroke="rgba(255,71,87,0.3)" stroke-width="1"/>
+          </g>
+
+          <!-- ── HEARTBEAT ICON (small, bottom left) ── -->
+          <g transform="translate(34,430)" opacity="0.30">
+            <path d="M0,0 C-10,-20 -30,-20 -30,0 C-30,15 0,32 0,32 C0,32 30,15 30,0 C30,-20 10,-20 0,0 Z"
+              fill="none" stroke="#ff4757" stroke-width="2"/>
+          </g>
+
+          <!-- ── GRID DOTS (subtle depth texture) ── -->
+          <g opacity="0.06">
+            <circle cx="80"  cy="170" r="1.5" fill="#00c6ff"/>
+            <circle cx="110" cy="170" r="1.5" fill="#00c6ff"/>
+            <circle cx="80"  cy="200" r="1.5" fill="#00c6ff"/>
+            <circle cx="110" cy="200" r="1.5" fill="#00c6ff"/>
+            <circle cx="80"  cy="230" r="1.5" fill="#00c6ff"/>
+            <circle cx="110" cy="230" r="1.5" fill="#00c6ff"/>
+            <circle cx="190" cy="170" r="1.5" fill="#00c6ff"/>
+            <circle cx="220" cy="170" r="1.5" fill="#00c6ff"/>
+            <circle cx="190" cy="200" r="1.5" fill="#00c6ff"/>
+            <circle cx="220" cy="200" r="1.5" fill="#00c6ff"/>
+            <circle cx="190" cy="360" r="1.5" fill="#00c6ff"/>
+            <circle cx="220" cy="360" r="1.5" fill="#00c6ff"/>
+            <circle cx="190" cy="390" r="1.5" fill="#00c6ff"/>
+            <circle cx="220" cy="390" r="1.5" fill="#00c6ff"/>
+          </g>
+        </svg>
+
+        <!-- Floating particles (CSS-driven) -->
+        <div class="av-particle" style="width:4px;height:4px;left:18%;bottom:15%;--dur:5.5s;--delay:0s;background:#00c6ff;"></div>
+        <div class="av-particle" style="width:3px;height:3px;left:70%;bottom:20%;--dur:7s;--delay:1.3s;background:#00ff99;"></div>
+        <div class="av-particle" style="width:5px;height:5px;left:85%;bottom:10%;--dur:6.2s;--delay:0.7s;background:#a78bfa;"></div>
+        <div class="av-particle" style="width:3px;height:3px;left:40%;bottom:8%;--dur:8s;--delay:2s;background:#00c6ff;"></div>
+        <div class="av-particle" style="width:4px;height:4px;left:55%;bottom:25%;--dur:5s;--delay:3.1s;background:#00ff99;"></div>
+        <div class="av-particle" style="width:2px;height:2px;left:28%;bottom:30%;--dur:9s;--delay:0.4s;background:#ffd32a;"></div>
+      </div>
+      <svg id="avatar-svg" viewBox="0 0 200 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+        <defs>
+          <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f5c29a"/>
+            <stop offset="100%" style="stop-color:#e8a87c"/>
+          </linearGradient>
+          <linearGradient id="coatGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1a3a6b"/>
+            <stop offset="100%" style="stop-color:#0d2147"/>
+          </linearGradient>
+          <linearGradient id="shirtGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#ffffff"/>
+            <stop offset="100%" style="stop-color:#e8f0fe"/>
+          </linearGradient>
+          <linearGradient id="pantsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1e2d45"/>
+            <stop offset="100%" style="stop-color:#111c30"/>
+          </linearGradient>
+          <linearGradient id="shoeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1a1a2e"/>
+            <stop offset="100%" style="stop-color:#0d0d1a"/>
+          </linearGradient>
+          <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:rgba(0,198,255,0.3)"/>
+            <stop offset="100%" style="stop-color:rgba(0,102,255,0)"/>
+          </linearGradient>
+          <filter id="softShadow">
+            <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="rgba(0,0,0,0.4)"/>
+          </filter>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Ground glow -->
+        <ellipse cx="100" cy="462" rx="55" ry="10" fill="url(#glowGrad)" opacity="0.6"/>
+
+        <!-- ── FEET & SHOES ── -->
+        <g id="av-legs">
+          <!-- Left shoe -->
+          <ellipse cx="84" cy="456" rx="18" ry="7" fill="url(#shoeGrad)" filter="url(#softShadow)"/>
+          <rect x="70" y="449" width="22" height="10" rx="5" fill="url(#shoeGrad)"/>
+          <!-- Right shoe -->
+          <ellipse cx="116" cy="456" rx="18" ry="7" fill="url(#shoeGrad)" filter="url(#softShadow)"/>
+          <rect x="108" y="449" width="22" height="10" rx="5" fill="url(#shoeGrad)"/>
+          <!-- Shoe shine -->
+          <ellipse cx="76" cy="451" rx="5" ry="2" fill="rgba(255,255,255,0.12)" transform="rotate(-15,76,451)"/>
+          <ellipse cx="108" cy="451" rx="5" ry="2" fill="rgba(255,255,255,0.12)" transform="rotate(15,108,451)"/>
+
+          <!-- Left leg/pants -->
+          <rect x="74" y="340" width="24" height="115" rx="8" fill="url(#pantsGrad)"/>
+          <!-- Right leg/pants -->
+          <rect x="102" y="340" width="24" height="115" rx="8" fill="url(#pantsGrad)"/>
+          <!-- Pants crease -->
+          <line x1="86" y1="350" x2="86" y2="445" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+          <line x1="114" y1="350" x2="114" y2="445" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        </g>
+
+        <!-- ── TORSO / LAB COAT ── -->
+        <g id="av-torso" filter="url(#softShadow)">
+          <!-- Coat body -->
+          <path d="M58,180 Q55,200 54,260 L54,355 Q75,365 100,366 Q125,365 146,355 L146,260 Q145,200 142,180 Z" fill="url(#coatGrad)"/>
+          <!-- Coat lapels -->
+          <path d="M100,185 L88,230 L80,235 L85,185 Z" fill="rgba(255,255,255,0.12)"/>
+          <path d="M100,185 L112,230 L120,235 L115,185 Z" fill="rgba(255,255,255,0.12)"/>
+          <!-- Coat collar shadow -->
+          <path d="M88,185 Q100,195 112,185" stroke="rgba(0,0,0,0.2)" stroke-width="2" fill="none"/>
+          <!-- White shirt underneath -->
+          <path d="M92,182 Q100,210 108,182 L108,190 Q100,218 92,190 Z" fill="url(#shirtGrad)"/>
+          <!-- Tie -->
+          <polygon points="100,192 96,200 97,230 100,235 103,230 104,200" fill="#c0392b"/>
+          <polygon points="96,200 104,200 102,206 98,206" fill="#922b21"/>
+          <!-- Coat buttons -->
+          <circle cx="100" cy="255" r="3" fill="rgba(255,255,255,0.2)"/>
+          <circle cx="100" cy="275" r="3" fill="rgba(255,255,255,0.2)"/>
+          <circle cx="100" cy="295" r="3" fill="rgba(255,255,255,0.2)"/>
+          <!-- Breast pocket -->
+          <rect x="115" y="210" width="20" height="14" rx="2" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <line x1="118" y1="210" x2="118" y2="207" stroke="var(--accent3)" stroke-width="2"/>
+          <line x1="122" y1="210" x2="122" y2="205" stroke="var(--accent)" stroke-width="2"/>
+          <!-- Stethoscope hint -->
+          <path d="M78,210 Q70,230 72,250 Q74,265 80,268" stroke="rgba(0,198,255,0.6)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <circle cx="80" cy="270" r="5" fill="none" stroke="rgba(0,198,255,0.6)" stroke-width="2"/>
+        </g>
+
+        <!-- ── ARMS ── -->
+        <!-- Left arm (viewer's right) -->
+        <g id="av-arm-left">
+          <path d="M58,188 Q44,210 42,260 Q41,290 46,310 L58,310 Q56,290 58,260 Q60,215 68,192 Z" fill="url(#coatGrad)"/>
+          <!-- Left hand -->
+          <ellipse cx="52" cy="318" rx="12" ry="10" fill="url(#skinGrad)"/>
+          <rect x="43" y="312" width="8" height="4" rx="2" fill="url(#skinGrad)"/>
+          <rect x="52" y="311" width="8" height="4" rx="2" fill="url(#skinGrad)"/>
+          <rect x="61" y="312" width="7" height="4" rx="2" fill="url(#skinGrad)"/>
+          <!-- Clipboard held in left arm -->
+          <rect x="30" y="298" width="30" height="38" rx="3" fill="#f0f4ff" stroke="rgba(0,102,255,0.4)" stroke-width="1.5"/>
+          <rect x="38" y="293" width="14" height="6" rx="3" fill="rgba(0,102,255,0.5)"/>
+          <line x1="35" y1="308" x2="55" y2="308" stroke="rgba(0,102,255,0.3)" stroke-width="1.5"/>
+          <line x1="35" y1="315" x2="55" y2="315" stroke="rgba(0,102,255,0.3)" stroke-width="1.5"/>
+          <line x1="35" y1="322" x2="55" y2="322" stroke="rgba(0,102,255,0.3)" stroke-width="1.5"/>
+          <line x1="35" y1="329" x2="48" y2="329" stroke="rgba(0,102,255,0.3)" stroke-width="1.5"/>
+        </g>
+        <!-- Right arm (viewer's left) - animated for gestures -->
+        <g id="av-arm-right">
+          <path d="M142,188 Q156,210 158,260 Q159,290 154,310 L142,310 Q144,290 142,260 Q140,215 132,192 Z" fill="url(#coatGrad)"/>
+          <!-- Right hand -->
+          <ellipse cx="148" cy="318" rx="12" ry="10" fill="url(#skinGrad)"/>
+          <rect x="140" y="312" width="7" height="4" rx="2" fill="url(#skinGrad)"/>
+          <rect x="148" y="311" width="8" height="4" rx="2" fill="url(#skinGrad)"/>
+          <rect x="156" y="312" width="8" height="4" rx="2" fill="url(#skinGrad)"/>
+        </g>
+
+        <!-- ── NECK ── -->
+        <rect x="90" y="155" width="20" height="30" rx="8" fill="url(#skinGrad)"/>
+
+        <!-- ── HEAD ── -->
+        <g id="av-head">
+          <!-- Head base -->
+          <ellipse cx="100" cy="130" rx="42" ry="48" fill="url(#skinGrad)" filter="url(#softShadow)"/>
+          <!-- Hair -->
+          <path d="M60,115 Q58,80 100,72 Q142,80 140,115 Q130,92 100,90 Q70,92 60,115 Z" fill="#2c1a0e"/>
+          <!-- Side hair -->
+          <path d="M60,115 Q55,128 58,140 Q60,125 65,120 Z" fill="#2c1a0e"/>
+          <path d="M140,115 Q145,128 142,140 Q140,125 135,120 Z" fill="#2c1a0e"/>
+          <!-- Hair shine -->
+          <path d="M80,82 Q100,76 120,82" stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- Ears -->
+          <ellipse cx="58" cy="132" rx="8" ry="11" fill="#e8a87c"/>
+          <ellipse cx="58" cy="132" rx="5" ry="7" fill="#d4956a"/>
+          <ellipse cx="142" cy="132" rx="8" ry="11" fill="#e8a87c"/>
+          <ellipse cx="142" cy="132" rx="5" ry="7" fill="#d4956a"/>
+          <!-- Eyebrows -->
+          <path d="M76,108 Q86,103 94,107" stroke="#2c1a0e" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M106,107 Q114,103 124,108" stroke="#2c1a0e" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- Eyes -->
+          <ellipse cx="85" cy="118" rx="10" ry="9" fill="white"/>
+          <ellipse cx="115" cy="118" rx="10" ry="9" fill="white"/>
+          <!-- Iris -->
+          <circle cx="85" cy="118" r="6" fill="#3d2b1f"/>
+          <circle cx="115" cy="118" r="6" fill="#3d2b1f"/>
+          <!-- Pupil -->
+          <circle cx="85" cy="118" r="3.5" fill="#111"/>
+          <circle cx="115" cy="118" r="3.5" fill="#111"/>
+          <!-- Eye shine -->
+          <circle cx="87" cy="115" r="1.8" fill="white"/>
+          <circle cx="117" cy="115" r="1.8" fill="white"/>
+          <!-- Eyelids (for blink animation) -->
+          <rect id="av-blink-l" x="75" y="109" width="20" height="0" rx="3" fill="url(#skinGrad)"/>
+          <rect id="av-blink-r" x="105" y="109" width="20" height="0" rx="3" fill="url(#skinGrad)"/>
+          <!-- Nose -->
+          <path d="M97,128 Q100,138 103,128" stroke="#c9896a" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <ellipse cx="93" cy="137" rx="4" ry="3" fill="rgba(0,0,0,0.12)"/>
+          <ellipse cx="107" cy="137" rx="4" ry="3" fill="rgba(0,0,0,0.12)"/>
+          <!-- Mouth group — animated for talking -->
+          <g id="av-mouth">
+            <path id="av-mouth-closed" d="M88,150 Q100,157 112,150" stroke="#c9896a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path id="av-mouth-open" d="M90,150 Q100,162 110,150" stroke="none" fill="#8B0000" opacity="0"/>
+            <ellipse id="av-mouth-inner" cx="100" cy="153" rx="8" ry="3" fill="#5a0000" opacity="0"/>
+            <!-- Smile dimples -->
+            <circle cx="85" cy="152" r="1.5" fill="rgba(0,0,0,0.1)"/>
+            <circle cx="115" cy="152" r="1.5" fill="rgba(0,0,0,0.1)"/>
+          </g>
+          <!-- Slight chin shadow -->
+          <ellipse cx="100" cy="173" rx="22" ry="5" fill="rgba(0,0,0,0.1)"/>
+        </g>
+
+        <!-- ── BADGE / NAME TAG ── -->
+        <rect x="68" y="235" width="64" height="28" rx="5" fill="rgba(0,198,255,0.1)" stroke="rgba(0,198,255,0.4)" stroke-width="1.5"/>
+        <text x="100" y="246" text-anchor="middle" font-family="'Syne',sans-serif" font-size="7" font-weight="800" fill="#00c6ff">GOVINDA AI</text>
+        <text x="100" y="257" text-anchor="middle" font-family="'DM Sans',sans-serif" font-size="6" fill="#6b8ab8">RKJ LABS · NOIDA</text>
+
+        <!-- ── STATUS BUBBLE ── -->
+        <g id="av-status-bubble" opacity="0">
+          <rect x="108" y="68" width="80" height="26" rx="8" fill="rgba(0,102,255,0.85)" stroke="rgba(0,198,255,0.5)" stroke-width="1"/>
+          <polygon points="112,94 125,94 118,104" fill="rgba(0,102,255,0.85)"/>
+          <text id="av-status-txt" x="148" y="85" text-anchor="middle" font-family="'DM Sans',sans-serif" font-size="9" fill="white">Thinking...</text>
+        </g>
+
+        <!-- Speaking wave bars under chin -->
+        <g id="av-speak-waves" opacity="0" transform="translate(70,175)">
+          <rect class="av-swave" x="0" y="0" width="5" height="8" rx="2" fill="var(--accent3)"/>
+          <rect class="av-swave" x="8" y="-4" width="5" height="16" rx="2" fill="var(--accent)"/>
+          <rect class="av-swave" x="16" y="-6" width="5" height="20" rx="2" fill="var(--accent3)"/>
+          <rect class="av-swave" x="24" y="-4" width="5" height="16" rx="2" fill="var(--accent)"/>
+          <rect class="av-swave" x="32" y="0" width="5" height="8" rx="2" fill="var(--accent3)"/>
+          <rect class="av-swave" x="40" y="-2" width="5" height="12" rx="2" fill="var(--accent)"/>
+          <rect class="av-swave" x="48" y="2" width="5" height="6" rx="2" fill="var(--accent3)"/>
+          <rect class="av-swave" x="56" y="-4" width="5" height="14" rx="2" fill="var(--accent)"/>
+        </g>
+      </svg>
+    </div>
+    <div id="avatar-left-status">
+      <div class="avp-live-dot"></div>
+      <span id="avatar-left-status-text">Ready to help you</span>
+    </div>
+
+    <!-- Quick Search Toggle Button -->
+    <button id="qs-toggle-btn" onclick="toggleQsDrawer()" title="Quick Search">
+      🔍 Quick Search <span class="qs-arrow">▲</span>
+    </button>
+
+    <!-- Quick Search Drawer (slides up from bottom) -->
+    <div id="qs-drawer">
+      <div class="qs-drawer-title">
+        <span>⚡ Quick Search</span>
+        <button class="qs-close-btn" onclick="closeQsDrawer()">✕</button>
+      </div>
+      <button class="qbtn all"    onclick="qs('all');closeQsDrawer()"><div class="qi" style="background:rgba(0,102,255,.15)">🔍</div>All Nearby</button>
+      <button class="qbtn pharma" onclick="qs('pharmacy');closeQsDrawer()"><div class="qi" style="background:rgba(0,198,255,.15)">💊</div>Pharmacies</button>
+      <button class="qbtn hosp"   onclick="qs('hospital');closeQsDrawer()"><div class="qi" style="background:rgba(255,71,87,.15)">🏥</div>Govt. Hospitals</button>
+      <button class="qbtn pvt"    onclick="qs('private-hospital');closeQsDrawer()"><div class="qi" style="background:rgba(167,139,250,.15)">🏨</div>Private Hospitals</button>
+      <button class="qbtn ngo"    onclick="qs('ngo');closeQsDrawer()"><div class="qi" style="background:rgba(0,255,153,.15)">🤝</div>NGOs</button>
+      <button class="qbtn poly"   onclick="qs('polyclinic');closeQsDrawer()"><div class="qi" style="background:rgba(255,211,42,.15)">🩺</div>Polyclinics</button>
+      <div style="height:1px;background:var(--border);margin:3px 0"></div>
+      <button class="qbtn" onclick="qs('about');closeQsDrawer()"><div class="qi" style="background:rgba(0,198,255,.12)">📍</div>About RKJ Labs</button>
+      <button class="qbtn" onclick="qs('emergency');closeQsDrawer()"><div class="qi" style="background:rgba(255,71,87,.12)">🚨</div>Emergency</button>
+      <div style="padding:6px 4px 0;text-align:center">
+        <div style="font-size:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px">Powered by</div>
+        <div style="font-family:var(--font-head);font-size:10px;font-weight:700;background:linear-gradient(90deg,#a78bfa,#60a5fa,var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent">XpertNote Analytics</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="sidebar"><!-- hidden --></aside>
+
+  <!-- Quick Search Drawer (lives inside avatar panel space) -->
+  <!-- Injected via JS below -->
+
+  <div class="chat-col">
+    <div id="msgs">
+      <div class="welcome">
+        <div class="wi">🧑‍⚕️</div>
+        <h2>Hello, I am Govinda AI</h2>
+        <p>Your friendly healthcare assistant for <strong>RKJ Labs, Noida</strong>. I find nearby pharmacies, government &amp; private hospitals, NGOs &amp; polyclinics — with live Maps data and Gemini AI insights.</p>
+        <div class="loc-chip">📍 A-28, A Block, Sector 9, Amaltash Marg, Noida – 201301</div><br>
+        <div class="voice-hint">🎙️ Voice enabled — tap the mic or type to get started</div>
+        <div id="greet-nudge" class="voice-hint" onclick="playGreetingNow()" style="margin-top:6px;cursor:pointer;background:rgba(0,198,255,0.10);border-color:rgba(0,198,255,0.3);color:var(--accent)">🔊 Tap to hear greeting</div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="irow">
+        <textarea id="inp" rows="1" placeholder="Type or 🎙️ speak your query… (try 'download Excel')" onkeydown="hkey(event)" oninput="ar(this)"></textarea>
+        <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Voice input">🎙️</button>
+        <button class="spk-btn active" id="spk-btn" onclick="toggleSpeaker()" title="Toggle voice responses">🔊</button>
+        <button class="sbtn" id="sbtn" onclick="send()">➤</button>
+      </div>
+      <div class="hints">
+        <span class="hc" onclick="si('Find pharmacies nearby')">💊 Pharmacies</span>
+        <span class="hc" onclick="si('Show government hospitals')">🏥 Govt. Hospitals</span>
+        <span class="hc" onclick="si('Show private hospitals')">🏨 Private Hospitals</span>
+        <span class="hc" onclick="si('List NGOs near RKJ Labs')">🤝 NGOs</span>
+        <span class="hc" onclick="si('Show polyclinics within 3 km')">🩺 Polyclinics</span>
+        <span class="hc" onclick="si('Show all nearby healthcare')">🔍 Show All</span>
+        <span class="hc" onclick="si('Download Excel file of results')">📊 Excel</span>
+        <span class="voice-chip" onclick="toggleMic()">🎙️ Speak</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+
+
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     EXOTEL OUTBOUND CALL PANEL
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- Floating Action Button -->
+<button id="call-fab" onclick="toggleCallPanel()" title="Outbound Calls (Exotel)">📞</button>
+<div class="call-fab-tip">📞 Outbound Calls</div>
+
+<!-- Call Panel -->
+<div id="call-panel">
+  <div class="cp-header">
+    <div class="cp-title">📞 Govinda AI — Outbound Calls</div>
+    <button class="cp-close" onclick="toggleCallPanel()">✕</button>
+  </div>
+  <div class="cp-tabs">
+    <button class="cp-tab active" id="cptab-single" onclick="switchCpTab('single')">Single Call</button>
+    <button class="cp-tab" id="cptab-bulk" onclick="switchCpTab('bulk')">Bulk Calls</button>
+    <button class="cp-tab" id="cptab-log" onclick="switchCpTab('log')">Call Log</button>
+  </div>
+  <!-- Single Call Tab -->
+  <div id="cptab-body-single" class="cp-body">
+    <div>
+      <div class="cp-label">Patient Phone Number</div>
+      <input class="cp-input" id="cp-phone" type="tel" placeholder="+91XXXXXXXXXX">
+    </div>
+    <div>
+      <div class="cp-label">Custom Opening Message <span style="color:var(--text-muted);font-weight:400;text-transform:none">(optional)</span></div>
+      <textarea class="cp-textarea" id="cp-custom-msg" placeholder="Leave blank to use Govinda default Hinglish feedback script…"></textarea>
+    </div>
+    <div id="cp-status-single" class="cp-status">
+      <div class="cp-status-dot"></div>
+      <span id="cp-status-txt">Ready</span>
+    </div>
+    <button class="cp-call-btn" id="cp-call-btn" onclick="triggerSingleCall()">
+      📞 Call Patient Now
+    </button>
+    <div style="font-size:10px;color:var(--text-muted);text-align:center;line-height:1.5">
+      Calls via Exotel from <b style="color:var(--accent)">09513886363</b> · Account: xpertnoteanalytics1
+    </div>
+  </div>
+  <!-- Bulk Calls Tab -->
+  <div id="cptab-body-bulk" class="cp-body" style="display:none">
+    <div class="cp-bulk-area">
+      📋 Enter one phone number per line. Govinda AI will call each patient with the feedback script.
+      Format: <b>+91XXXXXXXXXX</b>
+    </div>
+    <div>
+      <div class="cp-label">Patient Numbers (one per line)</div>
+      <textarea class="cp-bulk-nums" id="cp-bulk-nums" placeholder="+919876543210&#10;+918765432109&#10;+917654321098"></textarea>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input type="number" id="cp-bulk-delay" class="cp-input" style="width:80px" value="5" min="3" max="60">
+      <span style="font-size:11px;color:var(--text-muted)">seconds delay between calls</span>
+    </div>
+    <div id="cp-bulk-progress" class="cp-bulk-progress">
+      <div class="cp-progress-bar-wrap"><div class="cp-progress-bar" id="cp-prog-bar"></div></div>
+      <div class="cp-progress-label" id="cp-prog-label">0 / 0</div>
+    </div>
+    <div id="cp-status-bulk" class="cp-status">
+      <div class="cp-status-dot"></div>
+      <span id="cp-status-bulk-txt">Ready</span>
+    </div>
+    <button class="cp-call-btn" id="cp-bulk-btn" onclick="triggerBulkCalls()">
+      📋 Start Bulk Calling
+    </button>
+  </div>
+  <!-- Log Tab -->
+  <div id="cptab-body-log" class="cp-body" style="display:none">
+    <div id="cp-log" class="cp-log">
+      <div class="log-line"><span class="log-ts">--:--</span><span class="log-info">Call log ready. Make a call to see activity here.</span></div>
+    </div>
+    <button class="cp-clear-log" onclick="clearCallLog()">🗑 Clear Log</button>
+  </div>
+</div>
+
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════
+const LAT = 28.5865, LNG = 77.3185;
+let GKEY = '', MKEY = '', RADIUS = 2000;
+let busy = false, mapsReady = false, placesService = null;
+
+// Store last search results globally for Excel export
+let lastSearchResults = [];
+let lastSearchType = '';
+
+// Config panel visibility
+let configPanelVisible = true;
+
+// Active polyclinic specialty filter
+let activePolySpec = 'all';
+
+// ═══════════════════════════════════════════════════════════
+// CONFIG PANEL TOGGLE (API KEY SLIDEBAR)
+// ═══════════════════════════════════════════════════════════
+function toggleConfigPanel() {
+  configPanelVisible = !configPanelVisible;
+  const panel = document.getElementById('config-panel');
+  const track = document.getElementById('cfg-toggle-track');
+  const label = document.getElementById('cfg-toggle-label');
+  if (configPanelVisible) {
+    panel.style.display = 'flex';
+    track.classList.add('on');
+    label.textContent = 'Hide Keys';
+    toast('🔓 API keys visible');
+  } else {
+    panel.style.display = 'none';
+    track.classList.remove('on');
+    label.textContent = 'Show Keys';
+    toast('🔒 API keys hidden');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// POLYCLINIC SPECIALTY FILTER
+// ═══════════════════════════════════════════════════════════
+function togglePolyFilter() {
+  const wrap = document.getElementById('poly-filter-wrap');
+  const isActive = activeFilters.has('polyclinic');
+  if (isActive) {
+    wrap.classList.add('visible');
+    setPolySpec('all');
+  } else {
+    wrap.classList.remove('visible');
+    setPolySpec('all');
+  }
+}
+
+function setPolySpec(spec) {
+  activePolySpec = spec;
+  document.querySelectorAll('.poly-chip').forEach(c => c.classList.remove('active'));
+  const el = document.getElementById('ps-' + spec);
+  if (el) el.classList.add('active');
+  applyFilters();
+  if (spec !== 'all') toast(`🩺 Showing: ${el?.textContent || spec} polyclinics`);
+}
+
+// Polyclinic specialty keyword mapping
+const polySpecKeywords = {
+  dental:      ['dental','dentist','teeth','tooth','oral'],
+  pediatric:   ['pediatric','paediatric','child','children','baby','infant','kid'],
+  dermatology: ['dermatology','dermatologist','skin','acne','hair','cosmetic'],
+  womens:      ['women','gynae','gynecology','gynaecology','obstetric','obgyn','maternal','pregnancy'],
+  orthopedic:  ['orthopedic','orthopaedic','bone','joint','spine','fracture','physio'],
+  ent:         ['ent','ear','nose','throat','audiolog','hearing','sinus'],
+  mental:      ['mental','psychiatry','psychology','counsell','anxiety','depression','therapy'],
+  sexual:      ['sexual','sti','std','reproductive','family planning','contraceptive'],
+};
+
+function matchesPolySpec(name, addr) {
+  if (activePolySpec === 'all') return true;
+  const kws = polySpecKeywords[activePolySpec] || [];
+  const haystack = (name + ' ' + addr).toLowerCase();
+  return kws.some(k => haystack.includes(k));
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILTER STATE
+// ═══════════════════════════════════════════════════════════
+let activeFilters = new Set();
+
+function toggleFilter(f) {
+  if (activeFilters.has(f)) {
+    activeFilters.delete(f);
+    document.getElementById('f-' + f)?.classList.remove('active', 'active-open', 'active-rating');
+  } else {
+    // Mutually exclusive rating filters
+    if (f === 'r4') { activeFilters.delete('r3'); document.getElementById('f-r3')?.classList.remove('active', 'active-rating'); }
+    if (f === 'r3') { activeFilters.delete('r4'); document.getElementById('f-r4')?.classList.remove('active', 'active-rating'); }
+    activeFilters.add(f);
+    const el = document.getElementById('f-' + f);
+    if (el) {
+      if (f === 'open') el.classList.add('active-open');
+      else if (f === 'r4' || f === 'r3') el.classList.add('active-rating');
+      else el.classList.add('active');
+    }
+  }
+  applyFilters();
+}
+
+function clearFilters() {
+  activeFilters.clear();
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active', 'active-open', 'active-rating'));
+  document.getElementById('poly-filter-wrap').classList.remove('visible');
+  activePolySpec = 'all';
+  document.querySelectorAll('.poly-chip').forEach(c => c.classList.remove('active'));
+  const allChip = document.getElementById('ps-all');
+  if (allChip) allChip.classList.add('active');
+  applyFilters();
+  toast('Filters cleared');
+}
+
+function applyFilters() {
+  const cards = document.querySelectorAll('.card[data-type]');
+  let visible = 0;
+  cards.forEach(card => {
+    const type    = card.dataset.type || '';
+    const rating  = parseFloat(card.dataset.rating || '0');
+    const isOpen  = card.dataset.open === 'true';
+    const name    = card.dataset.name || '';
+    const addr    = card.dataset.addr || '';
+
+    let show = true;
+    if (activeFilters.has('open') && !isOpen) show = false;
+    if (activeFilters.has('r4') && rating < 4) show = false;
+    if (activeFilters.has('r3') && rating < 3) show = false;
+    // Type filters — if any type filter active, show only matching
+    const typeFilters = ['pharmacy','hospital','private-hospital','ngo','polyclinic'].filter(t => activeFilters.has(t));
+    if (typeFilters.length > 0 && !typeFilters.includes(type)) show = false;
+
+    // Polyclinic specialty filter
+    if (show && type === 'polyclinic' && activePolySpec !== 'all') {
+      if (!matchesPolySpec(name, addr)) show = false;
+    }
+
+    card.classList.toggle('filtered-hide', !show);
+    if (show) visible++;
+  });
+
+  if (cards.length > 0) {
+    const count = activeFilters.size > 0 ? `Showing ${visible} of ${cards.length} results` : '';
+    if (count) toast(count);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXCEL EXPORT
+// ═══════════════════════════════════════════════════════════
+function downloadExcel(data, filename) {
+  if (!data || data.length === 0) {
+    toast('⚠ No data to export');
+    return;
+  }
+  try {
+    const ws = XLSX.utils.json_to_sheet(data);
+    // Set column widths
+    ws['!cols'] = [
+      {wch:30}, {wch:16}, {wch:40}, {wch:18}, {wch:35}, {wch:28}, {wch:10}, {wch:14}, {wch:13}, {wch:10}, {wch:45}
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+    XLSX.writeFile(wb, filename || 'govinda-ai-results.xlsx');
+    toast('✅ Excel file downloaded!');
+  } catch(e) {
+    toast('⚠ Excel export failed: ' + e.message);
+  }
+}
+
+function buildExcelData(allPlaces) {
+  const rows = [];
+  for (const [type, places] of Object.entries(allPlaces)) {
+    for (const p of (places || [])) {
+      const d = p._dist;
+      rows.push({
+        'Name':          p.name || 'Unknown',
+        'Type':          type.charAt(0).toUpperCase() + type.slice(1),
+        'Address':       p.vicinity || '',
+        'Phone Number':  p._phone || 'N/A',
+        'Website':       p._website || 'N/A',
+        'Email':         p._email || 'N/A',
+        'Rating':        p.rating || 'N/A',
+        'Total Reviews': p.user_ratings_total || 0,
+        'Distance (km)': d >= 1000 ? (d / 1000).toFixed(2) : (d / 1000).toFixed(3),
+        'Open Now':      p.opening_hours?.isOpen?.() === true ? 'Yes' : p.opening_hours?.isOpen?.() === false ? 'No' : 'Unknown',
+        'Google Maps':   `https://www.google.com/maps/place/?q=place_id:${p.place_id}`,
+      });
+    }
+  }
+  return rows;
+}
+
+function addExcelBar(container, data, filename) {
+  const bar = document.createElement('div');
+  bar.className = 'excel-bar';
+  bar.innerHTML = `
+    <span>📊 ${data.length} result${data.length !== 1 ? 's' : ''} ready to export</span>
+    <button class="excel-dl-btn" onclick="downloadExcel(window._lastExcelData, '${filename}')">⬇ Download Excel</button>`;
+  container.appendChild(bar);
+  window._lastExcelData = data;
+  scrollBot();
+}
+
+// ═══════════════════════════════════════════════════════════
+// VOICE — STATE
+// ═══════════════════════════════════════════════════════════
+let voiceEnabled      = true;
+let isListening       = false;
+let isSpeaking        = false;
+let recognition       = null;
+let synth             = window.speechSynthesis;
+let selectedVoice     = null;   // the chosen voice
+let currentUtterance  = null;
+let voicesLoaded      = false;
+
+// ── Voice personality settings ──
+// Natural male voice — warm, clear, friendly. Not too fast or deep.
+const VOICE_RATE   = 0.97;
+const VOICE_PITCH  = 1.05;
+const VOICE_VOLUME = 1.0;
+
+// ═══════════════════════════════════════════════════════════
+// VOICE — INITIALISE SpeechSynthesis
+// Priority: warm, natural male voices. Not deep/robotic.
+// ═══════════════════════════════════════════════════════════
+function initVoices() {
+  const pickVoice = () => {
+    const voices = synth.getVoices();
+    if (!voices.length) return;
+    voicesLoaded = true;
+
+    const priorities = [
+      // Daniel — primary voice
+      v => v.name === 'Daniel' && v.lang === 'en-GB',
+      v => v.name.includes('Daniel') && v.lang === 'en-GB',
+      v => v.name.includes('Daniel') && v.lang.startsWith('en'),
+      // Fallbacks if Daniel unavailable
+      v => v.name.includes('Guy')    && v.lang.startsWith('en'),
+      v => v.name.includes('Andrew') && v.lang.startsWith('en'),
+      v => v.name.includes('Eric')   && v.lang.startsWith('en'),
+      v => v.name.includes('Brian')  && v.lang.startsWith('en'),
+      v => v.name === 'Google UK English Male',
+      v => v.lang === 'en-GB' && /male/i.test(v.name),
+      v => v.lang === 'en-GB',
+      v => v.lang === 'en-US',
+      v => v.lang.startsWith('en'),
+    ];
+
+    for (const test of priorities) {
+      const match = voices.find(test);
+      if (match) { selectedVoice = match; break; }
+    }
+
+    if (!selectedVoice && voices.length) {
+      selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
+
+    // Log selected voice to console for verification
+    console.log(`🎙️ Govinda AI voice: "${selectedVoice?.name}" | lang: ${selectedVoice?.lang}`);
+  };
+
+  pickVoice();
+  if (!voicesLoaded) {
+    synth.addEventListener('voiceschanged', pickVoice);
+    let tries = 0;
+    const poll = setInterval(() => {
+      pickVoice();
+      if (voicesLoaded || ++tries > 20) clearInterval(poll);
+    }, 250);
+  }
+}
+initVoices();
+
+// ═══════════════════════════════════════════════════════════
+// VOICE — TEXT CLEAN-UP
+// Makes the spoken text feel more natural and conversational.
+// Strips markdown/HTML, expands abbreviations, smooths punctuation.
+// ═══════════════════════════════════════════════════════════
+function cleanForSpeech(raw) {
+  return raw
+    .replace(/<[^>]+>/g, ' ')          // strip HTML tags
+    .replace(/\*\*(.+?)\*\*/g, '$1')   // strip bold markdown
+    .replace(/\*(.+?)\*/g, '$1')       // strip italic markdown
+    // emoji strip — covers all Unicode emoji blocks
+    .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')
+    // expand contractions for natural speech
+    .replace(/\bI am\b/g, 'I am')
+    .replace(/\bi'm\b/g, 'I am')
+    // common abbreviations → spoken form
+    .replace(/\bkm\b/gi,   'kilometres')
+    .replace(/\bm\b(?=\s)/g, 'metres')
+    .replace(/\bRKJ\b/g,   'R K J')
+    .replace(/\bNGO\b/g,   'N G O')
+    .replace(/\bENT\b/g,   'E N T')
+    .replace(/\bOB-GYN\b/gi, 'ob-gyn')
+    .replace(/\bPHC\b/g,   'P H C')
+    .replace(/\bCHC\b/g,   'C H C')
+    .replace(/\bESI\b/g,   'E S I')
+    .replace(/•/g, ',')                // bullet points become short pauses
+    .replace(/—/g, ', ')               // em-dash → pause
+    .replace(/\s{2,}/g, ' ')           // collapse whitespace
+    .trim();
+}
+
+// ═══════════════════════════════════════════════════════════
+// VOICE — SPEAK
+// ═══════════════════════════════════════════════════════════
+function speak(text, bubbleEl) {
+  if (!text) return;
+  // ── Route through Anam avatar if connected ──
+  if (window._avatarConnected && window._avatarPanelVisible && voiceEnabled) {
+    avatarSpeak(text, bubbleEl);
+    return;
+  }
+  if (!voiceEnabled) return;
+  synth.cancel();
+
+  const plain = cleanForSpeech(text);
+  if (!plain) return;
+
+  // Split on sentence boundaries for smooth sequential delivery
+  const sentences = plain.match(/[^.!?]+[.!?]*/g) || [plain];
+  let idx = 0;
+
+  function speakNext() {
+    if (idx >= sentences.length || !voiceEnabled) {
+      isSpeaking = false;
+      if (bubbleEl) bubbleEl.classList.remove('speaking');
+      hideVoiceBar();
+      currentUtterance = null;
+      return;
+    }
+
+    const chunk = sentences[idx++].trim();
+    if (!chunk) { speakNext(); return; }
+
+    const utter = new SpeechSynthesisUtterance(chunk);
+    if (selectedVoice) utter.voice = selectedVoice;
+    utter.lang   = selectedVoice?.lang || 'en-US';
+    utter.rate   = VOICE_RATE;
+    utter.pitch  = VOICE_PITCH;
+    utter.volume = VOICE_VOLUME;
+
+    currentUtterance = utter;
+
+    if (idx === 1) {
+      isSpeaking = true;
+      showVoiceBar('speaking');
+      if (bubbleEl) bubbleEl.classList.add('speaking');
+    }
+
+    utter.onend = () => { speakNext(); };
+    utter.onerror = (e) => {
+      if (e.error !== 'interrupted' && e.error !== 'canceled') speakNext();
+      else {
+        isSpeaking = false;
+        if (bubbleEl) bubbleEl.classList.remove('speaking');
+        hideVoiceBar();
+        currentUtterance = null;
+      }
+    };
+
+    synth.speak(utter);
+    keepSynthAlive();
+  }
+
+  speakNext();
+}
+
+let synthKeepAlive = null;
+function keepSynthAlive() {
+  clearInterval(synthKeepAlive);
+  synthKeepAlive = setInterval(() => {
+    if (!synth.speaking) { clearInterval(synthKeepAlive); return; }
+    synth.pause(); synth.resume();
+  }, 14000);
+}
+
+function stopSpeaking() {
+  synth.cancel();
+  isSpeaking = false;
+  clearInterval(synthKeepAlive);
+  document.querySelectorAll('.bub.speaking').forEach(b => b.classList.remove('speaking'));
+}
+
+function toggleSpeaker() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('spk-btn');
+  if (voiceEnabled) {
+    btn.textContent = '🔊'; btn.classList.add('active'); btn.classList.remove('muted');
+    toast('🔊 Voice responses ON');
+  } else {
+    btn.textContent = '🔇'; btn.classList.remove('active'); btn.classList.add('muted');
+    stopSpeaking(); toast('🔇 Voice responses OFF');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// VOICE — MICROPHONE
+// Chrome re-asks for mic permission every time .start() is
+// called on a new SpeechRecognition instance.  The fix:
+//   1. Open a real MediaStream ONCE and keep it alive.
+//   2. Use one SpeechRecognition instance forever (continuous=true).
+//   3. Manually gate listening on/off with a _wantListening flag.
+// ═══════════════════════════════════════════════════════════
+let _micStream      = null;   // persistent MediaStream — never closed
+let _wantListening  = false;  // user's intent (mic button toggle)
+let _recognitionActive = false; // true while recognition.start() has fired
+
+function _showMicDenied() {
+  toast('🎙️ Mic blocked — allow it in your browser address bar');
+  if (!window._micDeniedHinted) {
+    window._micDeniedHinted = true;
+    botMsg(
+      '🎙️ <b>Microphone access is blocked.</b><br><br>' +
+      'To enable it:<br>' +
+      '• <b>Chrome / Edge:</b> Click the 🔒 lock icon in the address bar → <b>Microphone → Allow</b>, then refresh.<br>' +
+      '• <b>Firefox:</b> Click the microphone icon in the address bar → <b>Allow</b>.<br>' +
+      '• <b>Safari:</b> Safari → Settings for This Website → Microphone → Allow.<br><br>' +
+      '<span style="color:var(--text-muted);font-size:12px">After allowing, click the 🎙️ mic button again.</span>',
+      false, false, ''
+    );
+  }
+}
+
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+
+  const r = new SR();
+  r.lang            = 'en-IN';
+  r.continuous      = true;   // KEY: stay open across multiple queries
+  r.interimResults  = true;
+  r.maxAlternatives = 1;
+
+  r.onstart = () => {
+    _recognitionActive = true;
+    if (_wantListening) {
+      isListening = true;
+      document.getElementById('mic-btn').classList.add('listening');
+      showVoiceBar('listening');
+    }
+  };
+
+  r.onresult = (e) => {
+    if (!_wantListening) return; // ignore results while muted
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    document.getElementById('inp').value = final || interim;
+    ar(document.getElementById('inp'));
+    if (final) {
+      // Pause UI while the query is processed
+      _wantListening = false;
+      isListening = false;
+      document.getElementById('mic-btn').classList.remove('listening');
+      hideVoiceBar();
+      setTimeout(() => {
+        if (document.getElementById('inp').value.trim()) send();
+      }, 400);
+    }
+  };
+
+  r.onerror = (e) => {
+    if (e.error === 'not-allowed') {
+      _wantListening = false;
+      isListening = false;
+      _recognitionActive = false;
+      document.getElementById('mic-btn').classList.remove('listening');
+      hideVoiceBar();
+      _showMicDenied();
+    }
+    // 'no-speech' and 'aborted' are harmless — recognition auto-restarts below
+  };
+
+  r.onend = () => {
+    _recognitionActive = false;
+    // Auto-restart so the stream never closes (prevents Chrome permission re-prompt)
+    if (_micStream && _micStream.active) {
+      try { r.start(); } catch(_) {}
+    } else {
+      isListening = false;
+      document.getElementById('mic-btn').classList.remove('listening');
+      if (!isSpeaking) hideVoiceBar();
+    }
+  };
+
+  return r;
+}
+
+async function toggleMic() {
+  if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    toast('⚠ Voice input not supported. Try Chrome.'); return;
+  }
+
+  // ── User wants to STOP listening ──
+  if (_wantListening) {
+    _wantListening = false;
+    isListening = false;
+    document.getElementById('mic-btn').classList.remove('listening');
+    hideVoiceBar();
+    return; // recognition keeps running silently in background — no permission re-prompt
+  }
+
+  // ── User wants to START listening ──
+
+  // Open the persistent MediaStream only once
+  if (!_micStream || !_micStream.active) {
+    try {
+      _micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      const denied = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError';
+      if (denied) _showMicDenied(); else toast('⚠ Mic error: ' + err.message);
+      return;
+    }
+  }
+
+  stopSpeaking();
+  _wantListening = true;
+
+  // Create recognition once, reuse forever
+  if (!recognition) recognition = initRecognition();
+  if (!recognition) { toast('⚠ Voice input not available'); return; }
+
+  // Start only if not already running
+  if (!_recognitionActive) {
+    try { recognition.start(); } catch(e) {
+      if (e.name !== 'InvalidStateError') toast('⚠ Could not start mic: ' + e.message);
+    }
+  } else {
+    // Already running in background — just flip UI on
+    isListening = true;
+    document.getElementById('mic-btn').classList.add('listening');
+    showVoiceBar('listening');
+  }
+}
+
+function stopAll() {
+  _wantListening = false;
+  isListening = false;
+  document.getElementById('mic-btn').classList.remove('listening');
+  stopSpeaking(); hideVoiceBar();
+  // Note: recognition keeps running silently to avoid permission re-prompt on next use
+}
+
+// ═══════════════════════════════════════════════════════════
+// VOICE BAR UI
+// ═══════════════════════════════════════════════════════════
+function showVoiceBar(mode) {
+  const bar  = document.getElementById('voice-bar');
+  const icon = document.getElementById('vbar-icon');
+  const txt  = document.getElementById('vbar-text');
+  const wave = document.getElementById('vbar-wave');
+  bar.classList.add('active');
+
+  if (mode === 'listening') {
+    icon.textContent = '🎙️'; txt.textContent = 'Listening… speak now';
+    txt.style.color = 'var(--violet)';
+    wave.innerHTML = '<div class="wbar"></div>'.repeat(7);
+    wave.querySelectorAll('.wbar').forEach(b => { b.style.background = 'var(--violet)'; });
+  } else {
+    icon.textContent = '🔊'; txt.textContent = '🧑‍⚕️ Govinda AI is speaking…';
+    txt.style.color = 'var(--accent3)';
+    wave.innerHTML = '<div class="sbar"></div>'.repeat(5);
+  }
+}
+
+function hideVoiceBar() {
+  if (!isListening && !isSpeaking) {
+    document.getElementById('voice-bar').classList.remove('active');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONFIG & MAPS
+// ═══════════════════════════════════════════════════════════
+document.getElementById('rslider').addEventListener('input', function() {
+  RADIUS = +this.value;
+  document.getElementById('rad-lbl').textContent =
+    RADIUS >= 1000 ? (RADIUS/1000).toFixed(1)+' km' : RADIUS+'m';
+});
+
+function applyConfig() {
+  GKEY = document.getElementById('gkey').value.trim();
+  MKEY = document.getElementById('mkey').value.trim();
+  if (MKEY && !mapsReady) loadMapsAPI();
+
+  // ── Anam avatar key ──
+  const newAnamKey = document.getElementById('anam-key-input').value.trim();
+  if (newAnamKey && newAnamKey !== window._ANAM_KEY) {
+    window._ANAM_KEY = newAnamKey;
+    toast('✓ Config applied — Anam key saved! Click Avatar to connect.');
+    if (window._avatarPanelVisible && !window._avatarConnected) {
+      startAvatarSession();
+    }
+  } else {
+    toast('✓ Config applied');
+  }
+}
+
+function loadMapsAPI() {
+  if (mapsReady || !MKEY) return;
+  const s = document.createElement('script');
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${MKEY}&libraries=places&callback=onMapsReady`;
+  s.async = true; s.defer = true;
+  s.onerror = () => botMsg('⚠️ <b>Maps API failed.</b> Check your key.', true);
+  document.head.appendChild(s);
+}
+
+window.onMapsReady = function() {
+  mapsReady = true;
+  const el = document.createElement('div');
+  el.style.cssText = 'position:absolute;width:1px;height:1px;visibility:hidden;';
+  document.body.appendChild(el);
+  const map = new google.maps.Map(el, { center:{lat:LAT,lng:LNG}, zoom:15 });
+  placesService = new google.maps.places.PlacesService(map);
+  toast('✅ Google Maps ready!');
+};
+
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function toast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+function si(t) { document.getElementById('inp').value = t; document.getElementById('inp').focus(); }
+function ar(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,90)+'px'; }
+function hkey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
+function scrollBot() { const m=document.getElementById('msgs'); requestAnimationFrame(()=>{m.scrollTop=m.scrollHeight;}); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function userBub(text) {
+  const d=document.createElement('div'); d.className='msg user';
+  d.innerHTML=`<div class="av">👤</div><div class="bub">${esc(text)}</div>`;
+  document.getElementById('msgs').appendChild(d); scrollBot();
+}
+
+function botMsg(html, isHTML=false, shouldSpeak=false, speakText='', skipFollowUp=false) {
+  rmTyping();
+  const d=document.createElement('div'); d.className='msg bot';
+  d.innerHTML=`<div class="av">🧑‍⚕️</div><div class="bub">${isHTML?html:esc(html)}</div>`;
+  document.getElementById('msgs').appendChild(d); scrollBot();
+  const bubEl = d.querySelector('.bub');
+  // Avatar text analysis for greetings/byes
+  const plainText = speakText || (isHTML ? bubEl.textContent : html);
+  if (window._avatarTextCheck) window._avatarTextCheck(plainText);
+  if (shouldSpeak || voiceEnabled) {
+    const textToSpeak = speakText || (isHTML ? '' : html);
+    if (textToSpeak) speak(textToSpeak, bubEl);
+  }
+  if (!skipFollowUp) setTimeout(() => addFollowUp(), 800);
+  return d;
+}
+
+function addFollowUp() {
+  const followUps = [
+    "Is there anything else I can help you with?",
+    "Can I assist you with anything else today?",
+    "Would you like to know anything else?",
+    "Feel free to ask if you need any further help!",
+  ];
+  const msg = followUps[Math.floor(Math.random() * followUps.length)];
+  const d = document.createElement('div'); d.className='msg bot';
+  d.innerHTML=`<div class="av">🧑‍⚕️</div><div class="bub follow-up">${esc(msg)}</div>`;
+  document.getElementById('msgs').appendChild(d); scrollBot();
+  const bubEl = d.querySelector('.bub');
+
+  // Wait for any current speech to finish, then speak the follow-up
+  function trySpeak() {
+    if (synth.speaking) { setTimeout(trySpeak, 300); return; }
+    if (voiceEnabled) speak(msg, bubEl);
+  }
+  setTimeout(trySpeak, 300);
+}
+
+function showTyping() {
+  rmTyping();
+  const d=document.createElement('div'); d.className='msg bot'; d.id='typr';
+  d.innerHTML=`<div class="av">🧑‍⚕️</div><div class="bub"><div class="dots"><span></span><span></span><span></span></div></div>`;
+  document.getElementById('msgs').appendChild(d); scrollBot();
+}
+function rmTyping() { const t=document.getElementById('typr'); if(t)t.remove(); }
+
+// ═══════════════════════════════════════════════════════════
+// DISTANCE
+// ═══════════════════════════════════════════════════════════
+function dist(la1,lo1,la2,lo2) {
+  const R=6371000,dl=(la2-la1)*Math.PI/180,dn=(lo2-lo1)*Math.PI/180;
+  const a=Math.sin(dl/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dn/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ═══════════════════════════════════════════════════════════
+// PLACES SEARCH
+// ═══════════════════════════════════════════════════════════
+function searchNearby(keyword, placeType) {
+  return new Promise(resolve => {
+    if (!placesService) { resolve([]); return; }
+    const collected = [];
+    const req = {
+      location: new google.maps.LatLng(LAT, LNG),
+      rankBy: google.maps.places.RankBy.DISTANCE,
+      keyword: keyword
+    };
+    if (placeType) req.type = placeType;
+
+    function handlePage(results, status, pagination) {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+        results.forEach(r => {
+          r._dist = dist(LAT,LNG,r.geometry.location.lat(),r.geometry.location.lng());
+          if (r._dist <= RADIUS) collected.push(r);
+        });
+        const allInRadius = results.every(r => r._dist <= RADIUS);
+        if (allInRadius && pagination && pagination.hasNextPage) {
+          setTimeout(() => pagination.nextPage(), 300);
+        } else { resolve(collected); }
+      } else { resolve(collected); }
+    }
+    placesService.nearbySearch(req, handlePage);
+  });
+}
+
+function getDetails(placeId) {
+  return new Promise(resolve => {
+    if (!placesService) { resolve({}); return; }
+    placesService.getDetails({
+      placeId,
+      fields:['name','formatted_address','formatted_phone_number','website','opening_hours','rating','user_ratings_total','business_status']
+    },(res,status)=>{
+      resolve(status===google.maps.places.PlacesServiceStatus.OK?res:{});
+    });
+  });
+}
+
+async function fetchCategory(type) {
+  const searches = {
+    pharmacy:[
+      {kw:'pharmacy',t:'pharmacy'},
+      {kw:'medical store',t:'pharmacy'},
+      {kw:'chemist drug store medicine',t:null},
+      {kw:'Jan Aushadhi store',t:null},
+    ],
+    hospital:[
+      {kw:'government hospital',t:'hospital'},
+      {kw:'govt hospital Noida',t:'hospital'},
+      {kw:'district hospital civil hospital Noida',t:null},
+      {kw:'community health centre CHC Noida',t:null},
+      {kw:'primary health centre PHC Noida',t:null},
+      {kw:'ESI hospital Noida',t:null},
+    ],
+    'private-hospital':[
+      {kw:'private hospital Noida',t:'hospital'},
+      {kw:'multispeciality hospital Noida',t:'hospital'},
+      {kw:'nursing home Noida',t:null},
+      {kw:'super specialty hospital Noida',t:null},
+      {kw:'Fortis Apollo Max Jaypee hospital Noida',t:null},
+    ],
+    ngo:[
+      {kw:'NGO Noida',t:null},
+      {kw:'non profit organisation Noida',t:null},
+      {kw:'charitable trust Noida',t:null},
+      {kw:'social welfare organisation Noida',t:null},
+      {kw:'health NGO Noida',t:null},
+    ],
+    polyclinic:[
+      {kw:'polyclinic',t:'doctor'},
+      {kw:'polyclinic Noida',t:null},
+      {kw:'health centre dispensary Noida',t:null},
+      {kw:'multi-specialty clinic Noida',t:null},
+      {kw:'diagnostic centre clinic',t:'health'},
+    ],
+  };
+  const queries = searches[type]||[{kw:type,t:null}];
+  const seen=new Set(),all=[];
+  for(const q of queries){
+    try{
+      const res=await searchNearby(q.kw,q.t);
+      for(const r of res){ if(!seen.has(r.place_id)){seen.add(r.place_id);all.push(r);} }
+    }catch(_){}
+  }
+  return all.sort((a,b)=>a._dist-b._dist);
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER CARD
+// ═══════════════════════════════════════════════════════════
+function renderCard(place,type){
+  const d=place._dist;
+  const ds=d>=1000?(d/1000).toFixed(2)+' km':Math.round(d)+' m';
+  const name=place.name||'Unknown';
+  const addr=place.vicinity||'';
+  const rat=place.rating?`⭐ ${place.rating} (${place.user_ratings_total||0})`:'⭐ No rating';
+  const gmapUrl=`https://www.google.com/maps/place/?q=place_id:${place.place_id}`;
+  const open=place.opening_hours?.isOpen?.();
+  const otag=open===true?'<span class="otag open">● Open Now</span>':open===false?'<span class="otag closed">● Closed</span>':'<span class="otag unk">● Hours N/A</span>';
+  const hasGMB=!!(place.rating||place.user_ratings_total);
+  const sid=place.place_id.replace(/[^a-zA-Z0-9]/g,'_');
+  const tagLabel = type==='private-hospital'?'Private Hospital':type;
+  return `<div class="card" id="c${sid}" data-type="${type}" data-rating="${place.rating||0}" data-open="${open===true}" data-name="${esc(name).replace(/"/g,'&quot;')}" data-addr="${esc(addr).replace(/"/g,'&quot;')}">
+    <div class="ch"><div class="cname">${esc(name)}</div><span class="ctag ${type}">${tagLabel}</span></div>
+    <div class="crat">${rat}</div>${otag}
+    <div class="caddr">📍 ${esc(addr)}</div>
+    <div class="cdist">📏 ${ds} from RKJ Labs</div>
+    <div class="bdg-row">
+      ${hasGMB?'<span class="bdg gmb">📍 GMB Listed</span>':''}
+      <span class="bdg now" id="wb${sid}">Loading…</span>
+    </div>
+    <div class="cacts">
+      <a class="cbtn pri" href="${gmapUrl}" target="_blank">🗺 Maps</a>
+      <button class="cbtn" onclick="aiInsight('${place.place_id.replace(/'/g,"\\'")}','${esc(name).replace(/'/g,"\\'")}','${type}')">✦ AI Info</button>
+    </div>
+  </div>`;
+}
+
+async function hydrateCard(place){
+  const sid=place.place_id.replace(/[^a-zA-Z0-9]/g,'_');
+  try{
+    const d=await getDetails(place.place_id);
+    const wb=document.getElementById('wb'+sid);
+    const crd=document.getElementById('c'+sid);
+    if(!crd)return;
+
+    // Save details back to place object for Excel export
+    if(d.formatted_phone_number) place._phone = d.formatted_phone_number;
+    if(d.website) place._website = d.website;
+    // Email is not provided by Google Places API; leave as undefined (will show N/A in Excel)
+
+    if(wb){
+      if(d.website){
+        wb.className='bdg web';wb.textContent='🌐 Has Website';
+        const acts=crd.querySelector('.cacts');
+        if(acts&&!acts.querySelector('.weblink')){
+          const a=document.createElement('a');
+          a.className='cbtn weblink';a.href=d.website;a.target='_blank';a.textContent='🌐 Web';
+          acts.appendChild(a);
+        }
+      } else { wb.className='bdg now';wb.textContent='No Website'; }
+    }
+    if(d.formatted_phone_number){
+      const row=crd.querySelector('.bdg-row');
+      if(row&&!row.querySelector('.bdg.ph')){
+        const ph=document.createElement('span');
+        ph.className='bdg ph';ph.textContent='📞 '+d.formatted_phone_number;
+        row.appendChild(ph);
+      }
+    }
+  }catch(_){}
+}
+
+// ═══════════════════════════════════════════════════════════
+// AI INSIGHT
+// ═══════════════════════════════════════════════════════════
+async function aiInsight(pid,name,type){
+  if(!GKEY){toast('⚠ Add Gemini key first');return;}
+  const sid=pid.replace(/[^a-zA-Z0-9]/g,'_');
+  const card=document.getElementById('c'+sid);
+  const ex=card?.querySelector('.ibox');if(ex){ex.remove();return;}
+  toast(`✦ Getting AI insight for ${name}…`);
+  const p=`You are Govinda AI. Give a 3-sentence factual insight about "${name}" (${type}) near Sector 9, Noida, UP, India. Cover: likely services offered, GMB profile likelihood, and one practical tip for visitors.`;
+  const txt=await callGemini(p);
+  if(txt&&card){
+    const b=document.createElement('div');b.className='ibox';
+    b.innerHTML=`<div class="ibox-lbl">✦ Gemini Insight</div><p>${esc(txt)}</p>`;
+    card.appendChild(b);scrollBot();
+    speak(txt, b);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// GEMINI
+// ═══════════════════════════════════════════════════════════
+async function callGemini(prompt){
+  if(!GKEY)return null;
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GKEY}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:700}})
+    });
+    const d=await r.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text||null;
+  }catch(_){return null;}
+}
+
+// ═══════════════════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════════════════
+async function doSearch(type){
+  const rad=RADIUS>=1000?(RADIUS/1000).toFixed(1)+' km':RADIUS+' m';
+  if(!MKEY){
+    const msg='Maps API key missing. Please enter your key in the config bar and click Apply.';
+    botMsg(`⚠️ <b>Maps API key missing.</b><br>Enter your key above and click <b>Apply</b>.<br>Enable: <b>Maps JavaScript API</b> + <b>Places API</b>.`,true,true,msg);
+    return;
+  }
+  if(!mapsReady){
+    loadMapsAPI();
+    const msg='Maps API is loading. Please wait a moment and try again.';
+    botMsg('⏳ Maps API is loading — please wait a moment then try again.',true,true,msg);
+    return;
+  }
+
+  showTyping();
+  const types=type==='all'?['pharmacy','hospital','private-hospital','ngo','polyclinic']:[type];
+  const icons={pharmacy:'💊',hospital:'🏥','private-hospital':'🏨',ngo:'🤝',polyclinic:'🩺'};
+  const labels={pharmacy:'Pharmacies',hospital:'Govt. Hospitals','private-hospital':'Private Hospitals',ngo:'NGOs',polyclinic:'Polyclinics'};
+  let totalFound=0,allHTML='';
+  const allPlaces={};
+
+  for(const t of types){
+    const res=await fetchCategory(t);
+    allPlaces[t]=res;totalFound+=res.length;
+    if(res.length){
+      allHTML+=`<div class="rh">${icons[t]} ${labels[t]} <span class="cnt">${res.length} found</span></div>
+                <div class="grid">${res.map(p=>renderCard(p,t)).join('')}</div>`;
+    } else {
+      allHTML+=`<div style="color:var(--text-muted);font-size:12px;margin-bottom:8px">${icons[t]} No ${labels[t]} found within ${rad}</div>`;
+    }
+  }
+
+  // Store results globally for Excel export
+  lastSearchResults = allPlaces;
+  lastSearchType = type;
+
+  const mapQ=type==='all'?'pharmacy hospital clinic ngo near Sector 9 Noida':`${type} near Sector 9 Noida`;
+  const mapSrc=`https://www.google.com/maps/embed/v1/search?key=${MKEY}&q=${encodeURIComponent(mapQ)}&center=${LAT},${LNG}&zoom=14`;
+
+  rmTyping();
+  const hdr=`Found <b>${totalFound}</b> location${totalFound!==1?'s':''} within <b>${rad}</b> of RKJ Labs:<br><br>`;
+  const wrapper=document.createElement('div');wrapper.className='msg bot';
+  wrapper.innerHTML=`<div class="av">🧑‍⚕️</div><div class="bub">${hdr}${allHTML}
+    <div class="mapwrap"><iframe src="${mapSrc}" allowfullscreen loading="lazy"></iframe></div></div>`;
+  document.getElementById('msgs').appendChild(wrapper);scrollBot();
+  // Trigger avatar present-data gesture (arm sweep top→bottom)
+  if (window.avatarSetState) window.avatarSetState('presentData');
+
+  // Show filter bar now that results are loaded
+  document.getElementById('filter-bar').classList.add('visible');
+
+  // Add Excel download bar
+  const excelData = buildExcelData(allPlaces);
+  addExcelBar(wrapper.querySelector('.bub'), excelData, `govinda-ai-${type}-results.xlsx`);
+
+  const spokenSummary = `I found ${totalFound} location${totalFound!==1?'s':''} within ${rad} of RKJ Labs. `;
+  const categoryBreakdown = types.map(t=>`${allPlaces[t]?.length||0} ${labels[t]}`).join(', ');
+  speak(spokenSummary + categoryBreakdown + '. Check the results on screen. You can also download them as an Excel file.', wrapper.querySelector('.bub'));
+
+  for(const t of types){ for(const p of (allPlaces[t]||[]))hydrateCard(p); }
+
+  if(GKEY&&totalFound>0){
+    const sp=`Summarize healthcare access near RKJ Labs, A-28 Sector 9, Noida. Found ${totalFound} locations (${types.join(', ')}) within ${rad}. Write 2 helpful sentences for a patient or visitor.`;
+    const sum=await callGemini(sp);
+    if(sum){
+      const ib=document.createElement('div');ib.className='ibox';ib.style.marginTop='10px';
+      ib.innerHTML=`<div class="ibox-lbl">✦ Gemini Summary</div><p>${esc(sum)}</p>`;
+      wrapper.querySelector('.bub').appendChild(ib);scrollBot();
+    }
+  }
+  setTimeout(() => addFollowUp(), 900);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ABOUT
+// ═══════════════════════════════════════════════════════════
+async function doAbout(){
+  showTyping();
+  let gi='';
+  if(GKEY){
+    const p=`Tell me about "RKJ Labs" at A-28, A Block, Sector 9, Amaltash Marg, Noida 201301, UP, India. Cover: type of lab/services, GMB profile likelihood, website, nearby landmarks, one useful fact for patients. Under 120 words.`;
+    gi=await callGemini(p)||'';
+  }
+  const mapSrc=MKEY
+    ?`https://www.google.com/maps/embed/v1/place?key=${MKEY}&q=${encodeURIComponent('RKJ Labs Sector 9 Noida')}&zoom=16`
+    :`https://www.google.com/maps?q=${LAT},${LNG}&z=16&output=embed`;
+  rmTyping();
+  const spokenText = `RKJ Labs is located at A-28, A Block, Sector 9, Amaltash Marg, Noida, Uttar Pradesh, PIN 201301. ${gi}`;
+  botMsg(`<b>📍 RKJ Labs – Location Details</b><br><br>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:8px">
+      <b style="color:var(--text)">Address:</b> A-28, A Block, Sector 9, Amaltash Marg, Noida – 201301<br>
+      <b style="color:var(--text)">Coordinates:</b> ${LAT}°N, ${LNG}°E<br>
+      <b style="color:var(--text)">District:</b> Gautam Buddha Nagar, Uttar Pradesh<br>
+      <b style="color:var(--text)">PIN:</b> 201301
+    </div>
+    ${gi?`<div class="ibox"><div class="ibox-lbl">✦ Gemini AI Analysis</div><p>${esc(gi)}</p></div>`:''}
+    <div class="mapwrap" style="margin-top:10px"><iframe src="${mapSrc}" allowfullscreen loading="lazy"></iframe></div>`,true,true,spokenText);
+}
+
+// ═══════════════════════════════════════════════════════════
+// EMERGENCY
+// ═══════════════════════════════════════════════════════════
+function doEmergency(){
+  rmTyping();
+  const contacts=[
+    ['🆘 Police','100'],['🚑 Ambulance','108 / 102'],
+    ['🔥 Fire Brigade','101'],['🏥 District Hospital','0120-2620100'],
+    ['☎ UP CM Helpline','1076'],['💊 Poison Control','1800-116-117'],
+    ['👮 Noida Police','0120-2440000'],['🧠 Mental Health','iCall: 9152987821'],
+  ];
+  const spoken = 'Here are the emergency contacts for Noida. Police: 100. Ambulance: 108 or 102. Fire Brigade: 101. District Hospital: 0120-2620100. Noida Police: 0120-2440000.';
+  botMsg(`<b style="color:var(--red)">🚨 Emergency Contacts – Noida Region</b><br><br>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:12px">
+    ${contacts.map(([k,v])=>`<div style="background:rgba(255,71,87,.07);border:1px solid rgba(255,71,87,.18);border-radius:9px;padding:10px">
+      <div style="font-weight:700;margin-bottom:3px">${k}</div>
+      <div style="color:var(--text-muted)">${v}</div></div>`).join('')}
+  </div>
+  <div style="margin-top:9px;font-size:11px;color:var(--text-muted)">
+    📍 Nearest Govt Hospital: <b style="color:var(--text)">District Hospital, Sector 30, Noida</b> (~3 km)<br>
+    📍 Nearest PHC: <b style="color:var(--text)">PHC Sector 10, Noida</b> (~0.5 km)
+  </div>`,true,true,spoken);
+}
+
+// ═══════════════════════════════════════════════════════════
+// QUICK BUTTONS & INTENT
+// ═══════════════════════════════════════════════════════════
+function qs(t){
+  const lbl={all:'Show all nearby healthcare',pharmacy:'Find nearby pharmacies',hospital:'Find government hospitals','private-hospital':'Find private hospitals nearby',ngo:'Find NGOs nearby',polyclinic:'Find polyclinics',about:'Tell me about RKJ Labs',emergency:'Show emergency contacts'};
+  userBub(lbl[t]||t);
+  if(t==='about')doAbout();
+  else if(t==='emergency')doEmergency();
+  else doSearch(t);
+}
+
+function intent(text){
+  const t=text.toLowerCase();
+  if(/excel|spreadsheet|download|export|xlsx|file/.test(t)) return 'excel';
+  if(/filter|sort|open now|rating|stars/.test(t)) return 'filter';
+  if(/all|everything|show all|every/.test(t)) return 'all';
+  if(/pharma|medicine|chemist|drug|medic/.test(t)) return 'pharmacy';
+  if(/private.*(hospital|clinic|nursing)|nursing home|multispecialt|super.?specialt/.test(t)) return 'private-hospital';
+  if(/hospital|govt|government/.test(t)) return 'hospital';
+  if(/ngo|charity|welfare|social|nonprofit/.test(t)) return 'ngo';
+  if(/poly|clinic|doctor|dispensary/.test(t)) return 'polyclinic';
+  if(/about|rkj|lab|where is|location/.test(t)) return 'about';
+  if(/emergency|urgent|ambulance|fire|police/.test(t)) return 'emergency';
+  // ── Humanised intents ──
+  if(/\b(hi|hello|hey|hiya|howdy|namaste|namaskar|good morning|good afternoon|good evening|good night|greetings|sup|what'?s up|wassup)\b/.test(t)) return 'greet';
+  if(/\b(thank|thanks|thank you|thankyou|thx|thnx|ty|bahut shukriya|shukriya|dhanyavaad)\b/.test(t)) return 'thanks';
+  if(/\b(bye|goodbye|good bye|see you|see ya|take care|ciao|alvida|tata|ttyl)\b/.test(t)) return 'bye';
+  if(/\b(how are you|how r u|how do you do|hows it going|how's it going|you good|you okay|you ok)\b/.test(t)) return 'howareyou';
+  if(/\b(who are you|what are you|tell me about yourself|introduce yourself|your name|what is your name|what's your name)\b/.test(t)) return 'whoareyou';
+  if(/\b(good job|great job|well done|amazing|awesome|excellent|brilliant|superb|fantastic|you'?re great|you'?re the best|love you|i love you|you rock|wahoo|shabash)\b/.test(t)) return 'compliment';
+  if(/\b(sorry|i'?m sorry|my bad|apologies|apology|forgive me|pardon|excuse me|oops)\b/.test(t)) return 'apology';
+  if(/\b(help|what can you do|what do you do|how do you work|how can you help|your features|capabilities)\b/.test(t)) return 'help';
+  return 'gemini';
+}
+
+// ═══════════════════════════════════════════════════════════
+// HUMANISED RESPONSES
+// ═══════════════════════════════════════════════════════════
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function doHumanResponse(type){
+  const hour = new Date().getHours();
+  const timeOfDay = hour<12?'morning':hour<17?'afternoon':'evening';
+
+  const responses = {
+
+    greet: () => {
+      const greets = [
+        `Good ${timeOfDay}! 😊 It's really nice to have you here. I am Govinda AI, your healthcare companion for RKJ Labs. How can I make your day a little easier today?`,
+        `Hey there! 👋 Welcome to Govinda AI. I am so glad you stopped by. Whether you're looking for a pharmacy, hospital, or just some information about RKJ Labs — I am all yours. What do you need?`,
+        `Namaste! 🙏 Good ${timeOfDay} to you. I am Govinda AI, always here to help you find the right healthcare around Noida. What can I do for you today?`,
+        `Hello! 😄 Great to see you. I am Govinda AI — think of me as your personal healthcare guide for the RKJ Labs neighbourhood. How can I help you right now?`,
+      ];
+      return pick(greets);
+    },
+
+    thanks: () => {
+      const thanks = [
+        `You're so welcome! 🙏 Honestly, helping you is what I am here for — it truly makes my day. Is there anything else I can do for you?`,
+        `Aww, that means a lot! 😊 I am genuinely grateful to be of help. Don't hesitate to come back anytime you need something — I'll always be right here.`,
+        `It was my pleasure, really! 💙 No thanks needed — your satisfaction is more than enough for me. Anything else on your mind?`,
+        `Happy to help, always! 🌟 That's exactly why I am here. Please feel free to ask me anything else — big or small, I've got you covered.`,
+        `You're very welcome! 😊 I am grateful I could assist. Take care of yourself, and don't hesitate to reach out whenever you need me again!`,
+      ];
+      return pick(thanks);
+    },
+
+    bye: () => {
+      const byes = [
+        `Take care! 👋 It was really lovely chatting with you. Come back anytime — I'll be right here whenever you need me. Stay healthy! 💙`,
+        `Goodbye! 😊 Wishing you a wonderful ${timeOfDay}. Please don't hesitate to return if you need any help. RKJ Labs and I are always here for you!`,
+        `See you soon! 🌟 It was great helping you today. Stay safe, stay healthy — and remember, I am just a message away whenever you need anything!`,
+        `Alvida! 🙏 It was a pleasure. Take good care of yourself and your loved ones. Come back anytime — Govinda AI will always be happy to help!`,
+      ];
+      return pick(byes);
+    },
+
+    howareyou: () => {
+      const hows = [
+        `I am doing wonderfully, thank you so much for asking! 😊 It genuinely warms me up when someone checks in. I am fully charged and ready to help you today — what's on your mind?`,
+        `Oh, I am great! 💙 Every conversation makes my day better. And more importantly — how are <b>you</b> doing? Is there anything I can help you with today?`,
+        `Honestly? I am fantastic! 🌟 I love what I do — helping people find the right healthcare is truly rewarding. How about you? Is everything okay on your end?`,
+        `I am doing really well, thanks for caring! 😄 Ready and excited to help you. What can I assist you with today?`,
+      ];
+      return pick(hows);
+    },
+
+    whoareyou: () => {
+      return `I am <b>Govinda AI</b> 🧑‍⚕️ — your friendly healthcare assistant, built with care for <b>RKJ Labs</b> in Sector 9, Noida.<br><br>
+I was created to make healthcare navigation easier for patients and visitors in the Noida area. I can:<br>
+• 💊 Find nearby <b>pharmacies</b> and medical stores<br>
+• 🏥 Locate <b>government hospitals</b> and clinics<br>
+• 🏨 Find <b>private hospitals</b> and nursing homes<br>
+• 🤝 Discover <b>NGOs</b> and welfare organisations<br>
+• 🩺 Find <b>polyclinics</b> by specialty (Dental, Pediatric, Skin, Women's Health & more)<br>
+• 📍 Tell you all about <b>RKJ Labs</b><br>
+• 🚨 Share <b>emergency contacts</b> for Noida<br><br>
+Think of me as your personal healthcare guide — always here, always ready. 😊 What can I help you with today?`;
+    },
+
+    compliment: () => {
+      const compliments = [
+        `Aww, you just made my whole day! 😄🌟 Thank you so much — your kind words truly mean everything. Now, how can I keep impressing you? What do you need?`,
+        `That's so sweet of you to say! 💙 I am genuinely blushing right now — if AIs could blush! 😄 I'll keep doing my best for you. What's next?`,
+        `Wow, thank you! 🙏 I put my heart into every response, so hearing that really motivates me. Is there anything else I can do for you today?`,
+        `You're too kind! 😊🌟 It's feedback like yours that keeps me going. I am so glad I could help — what else can I do for you?`,
+      ];
+      return pick(compliments);
+    },
+
+    apology: () => {
+      const apologies = [
+        `Oh, please don't worry at all! 😊 There's absolutely nothing to apologise for. I am here to help, not to judge. What can I do for you?`,
+        `No need to say sorry — really! 💙 I am just happy you're here. We all have those moments. Now, what can I help you with?`,
+        `It's completely okay, I promise! 😄 I am here for you no matter what. Take a breath — what do you need help with today?`,
+      ];
+      return pick(apologies);
+    },
+
+    help: () => {
+      return `Of course! Here's what I can do for you 😊:<br><br>
+<b>🔍 Find Nearby Healthcare</b><br>
+Just ask things like <i>"Find pharmacies near me"</i>, <i>"Show government hospitals"</i>, <i>"Find private hospitals"</i>, or <i>"Show dental polyclinics"</i> — I'll pull up live results with ratings, distances and maps.<br><br>
+<b>🏨 Private Hospitals</b><br>
+Ask <i>"Show private hospitals"</i> or <i>"Find nursing homes nearby"</i> and I'll list multispeciality and private care facilities.<br><br>
+<b>🩺 Polyclinic Specialties</b><br>
+After searching polyclinics, use the <b>specialty filter</b> to narrow by Dental, Pediatric, Dermatology, Women's Health, Orthopedic, ENT, Mental Health, or Sexual Health.<br><br>
+<b>📍 About RKJ Labs</b><br>
+Ask <i>"Tell me about RKJ Labs"</i> and I'll share location details and a live map.<br><br>
+<b>🚨 Emergency Contacts</b><br>
+Say <i>"Emergency"</i> and I'll instantly show you all important Noida emergency numbers.<br><br>
+<b>📊 Download Excel</b><br>
+After any search, say <i>"Download Excel"</i> and I'll export all results to a spreadsheet — including name, address, phone number, website, email, rating, and more.<br><br>
+<b>🔽 Filter Results</b><br>
+Ask to <i>"filter by open now"</i> or <i>"show 4-star places"</i> to narrow things down.<br><br>
+<b>🔒 Hide API Keys</b><br>
+Use the <b>Hide Keys</b> toggle slider in the config bar to show/hide your API keys for privacy.<br><br>
+<b>🎙️ Voice</b><br>
+You can speak to me using the mic button — hands-free and easy!<br><br>
+What would you like to start with? 😊`;
+    },
+  };
+
+  const fn = responses[type];
+  const html = fn ? fn() : null;
+  if (!html) return false;
+
+  // Humanised typing delay — feels more natural
+  showTyping();
+  const delay = 600 + Math.random() * 600;
+  setTimeout(() => {
+    rmTyping();
+    const plain = html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+    botMsg(html, true, true, plain, type==='bye');
+  }, delay);
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAIN SEND
+// ═══════════════════════════════════════════════════════════
+async function send(){
+  const el=document.getElementById('inp');
+  const text=el.value.trim();
+  if(!text||busy)return;
+  el.value='';el.style.height='auto';
+  document.getElementById('sbtn').disabled=true;busy=true;
+
+  if(isListening&&recognition)recognition.stop();
+  userBub(text);
+
+  const rm=text.match(/(\d+)\s*(km|kilometer|kilometre|metre|meter|\bm\b)/i);
+  if(rm){
+    const v=+rm[1],u=rm[2].toLowerCase();
+    RADIUS=u.startsWith('k')?v*1000:v;
+    const sl=document.getElementById('rslider');
+    sl.value=Math.min(Math.max(RADIUS,500),10000);
+    document.getElementById('rad-lbl').textContent=RADIUS>=1000?(RADIUS/1000).toFixed(1)+' km':RADIUS+'m';
+  }
+
+  const it=intent(text);
+
+  if(it==='excel'){
+    // Download Excel of last search results
+    if(Object.keys(lastSearchResults).length === 0){
+      botMsg('Please search for some results first (e.g. "Find pharmacies nearby"), then ask me to download Excel!', false, true, 'Please search for some results first, then I can create the Excel file for you.');
+    } else {
+      const excelData = buildExcelData(lastSearchResults);
+      const filename = `govinda-ai-${lastSearchType||'results'}-${new Date().toISOString().slice(0,10)}.xlsx`;
+      downloadExcel(excelData, filename);
+      botMsg(`✅ <b>Excel file downloaded!</b><br><br>Your file <b>${filename}</b> contains <b>${excelData.length} records</b> with name, type, address, phone number, website, email, rating, distance, open/closed status, and Google Maps links.`, true, true, `Excel file downloaded with ${excelData.length} records. Check your downloads folder.`);
+    }
+  } else if(it==='filter'){
+    document.getElementById('filter-bar').classList.add('visible');
+    botMsg('I\'ve opened the <b>filter panel</b> at the top for you! 🔽<br><br>You can filter results by:<br>• <b>Open Now</b> — only show currently open places<br>• <b>4+ or 3+ Stars</b> — filter by rating<br>• <b>Type</b> — Pharmacy, Hospital, NGO, Polyclinic', true, true, 'Filter panel is now open. You can filter by open status, star rating, or type of place.');
+  } else if(it==='about'){ await doAbout(); }
+  else if(it==='emergency'){ showTyping(); await new Promise(r=>setTimeout(r,300)); doEmergency(); }
+  else if(['greet','thanks','bye','howareyou','whoareyou','compliment','apology','help'].includes(it)){
+    doHumanResponse(it);
+    busy=false;
+    document.getElementById('sbtn').disabled=false;
+    return; // early return — busy already released
+  } else if(it==='gemini'){
+    if(!GKEY){
+      const msg='Please add your Gemini API key in the config bar for free-form questions.';
+      botMsg('Add your <b>Gemini API key</b> in the config bar for free-form questions.<br>For place searches, add your <b>Maps API key</b> too.',true,true,msg);
+    } else {
+      showTyping();
+      const resp=await callGemini(
+        `You are Govinda AI, a helpful healthcare assistant for RKJ Labs at A-28 Sector 9, Amaltash Marg, Noida 201301. `+
+        `User asked: "${text}". Reply helpfully in 2-3 sentences. Suggest the sidebar quick-buttons for place searches.`
+      );
+      rmTyping();
+      const reply=resp||'Try asking about pharmacies, hospitals, NGOs, or polyclinics.';
+      botMsg(reply,false,true,reply);
+    }
+  } else { await doSearch(it); }
+
+  busy=false;
+  document.getElementById('sbtn').disabled=false;
+}
+
+// ═══════════════════════════════════════════════════════════
+// STARTUP GREETING
+// ═══════════════════════════════════════════════════════════
+let _greetText = '';
+let _greetBubble = null;
+let _greetSpoken = false;
+
+function playGreetingNow() {
+  if (_greetSpoken) return;
+  if (!_greetText || !_greetBubble) return;
+  _greetSpoken = true;
+  const nudge = document.getElementById('greet-nudge');
+  if (nudge) nudge.style.display = 'none';
+  speak(_greetText, _greetBubble);
+}
+
+// On first user interaction, auto-play the greeting (Chrome autoplay policy fix).
+// We keep the listeners alive until the greeting is actually spoken, so early clicks
+// before the bubble is ready (within the 800ms splash delay) still trigger it later.
+function _onFirstInteraction() {
+  if (!voiceEnabled) return;
+  if (_greetText && _greetBubble && !_greetSpoken) {
+    document.removeEventListener('click',      _onFirstInteraction);
+    document.removeEventListener('keydown',    _onFirstInteraction);
+    document.removeEventListener('touchstart', _onFirstInteraction);
+    playGreetingNow();
+  }
+  // If greet text not ready yet, leave listeners in place for the next interaction
+}
+document.addEventListener('click',      _onFirstInteraction);
+document.addEventListener('keydown',    _onFirstInteraction);
+document.addEventListener('touchstart', _onFirstInteraction);
+
+
+// ══════════════════════════════════════════════════════════
+// ANAM.AI AVATAR — complete integration
+// Architecture: Anam face+voice, Gemini brain (CUSTOMER_CLIENT_V1)
+// ══════════════════════════════════════════════════════════
+window._ANAM_KEY        = '';
+window._avatarConnected = false;
+window._avatarPanelVisible = false;
+window._avatarMinimized = false;
+window._anamClient      = null;
+window._anamSdkReady    = false;
+
+function setAvStatus(icon, text) {
+  var ic = document.getElementById('avatar-status-icon');
+  var tx = document.getElementById('avatar-status-text');
+  if (ic) ic.textContent = icon;
+  if (tx) tx.textContent = text;
+}
+
+function setAvOverlay(show, html) {
+  var ov = document.getElementById('avatar-overlay');
+  var ot = document.getElementById('avatar-overlay-text');
+  if (!ov) return;
+  if (show) {
+    ov.classList.remove('hidden');
+    if (html !== undefined && ot) ot.innerHTML = html;
+  } else {
+    ov.classList.add('hidden');
+  }
+}
+
+function toggleAvatarPanel() {
+  window._avatarPanelVisible = !window._avatarPanelVisible;
+  window._avatarMinimized = false;
+  var panel = document.getElementById('avatar-panel');
+  var btn   = document.getElementById('avt-toggle-btn');
+  if (!panel || !btn) return;
+
+  if (window._avatarPanelVisible) {
+    panel.classList.add('visible');
+    panel.classList.remove('minimized');
+    btn.classList.add('active');
+    btn.innerHTML = '<div class="avt-dot"></div> Avatar ✓';
+    if (window._ANAM_KEY && !window._avatarConnected) {
+      startAvatarSession();
+    } else if (!window._ANAM_KEY) {
+      setAvOverlay(true, 'Enter your <b>Anam API key</b> in the config bar and click <b>Apply</b>');
+    }
+  } else {
+    panel.classList.remove('visible');
+    btn.classList.remove('active');
+    btn.innerHTML = '<div class="avt-dot"></div> Avatar';
+    stopAvatarSession();
+  }
+}
+
+function minimizeAvatar() {
+  window._avatarMinimized = !window._avatarMinimized;
+  var panel = document.getElementById('avatar-panel');
+  if (panel) panel.classList.toggle('minimized', window._avatarMinimized);
+}
+
+function loadAnamSdk() {
+  return new Promise(function(resolve, reject) {
+    if (window._anamSdkReady && window._AnamCreateClient) { resolve(); return; }
+
+    var script = document.createElement('script');
+    script.type = 'module';
+    // Use a safe string concat to avoid any template literal issues
+    var lines = [
+      'import { createClient, AnamEvent } from "https://esm.sh/@anam-ai/js-sdk@latest";',
+      'window._AnamCreateClient = createClient;',
+      'window._AnamEvent = AnamEvent;',
+      'window._anamSdkReady = true;',
+      'window.dispatchEvent(new CustomEvent("anam-ready"));'
+    ];
+    script.textContent = lines.join('\n');
+    document.head.appendChild(script);
+
+    function onReady() { resolve(); }
+    window.addEventListener('anam-ready', onReady, { once: true });
+    setTimeout(function() { reject(new Error('Anam SDK load timed out')); }, 15000);
+  });
+}
+
+async function startAvatarSession() {
+  if (window._avatarConnected) return;
+  if (!window._ANAM_KEY) {
+    setAvOverlay(true, 'Enter your <b>Anam API key</b> and click <b>Apply</b>');
+    return;
+  }
+
+  setAvOverlay(true, '<div class="avp-spinner"></div>Loading Anam SDK…');
+  setAvStatus('⏳', 'Loading SDK…');
+
+  try {
+    await loadAnamSdk();
+  } catch(e) {
+    setAvOverlay(true, '❌ Could not load Anam SDK.<br>Check your internet connection.');
+    setAvStatus('❌', 'SDK load failed');
+    toast('⚠ Anam SDK failed: ' + e.message);
+    return;
+  }
+
+  setAvOverlay(true, '<div class="avp-spinner"></div>Requesting session…');
+  setAvStatus('⏳', 'Connecting…');
+
+  var sessionToken;
+  try {
+    var res = await fetch('https://api.anam.ai/v1/auth/session-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + window._ANAM_KEY
+      },
+      body: JSON.stringify({
+        personaConfig: {
+          name: 'Govinda',
+          avatarId: '30fa96d0-26c4-4e55-94a0-517025942e18',
+          voiceId: '6bfbe25a-979d-40f3-a92b-5394170af54b',
+          llmId: 'CUSTOMER_CLIENT_V1',
+          systemPrompt: 'You are Govinda AI, a helpful healthcare assistant for RKJ Labs in Sector 9, Noida. Respond concisely and warmly.'
+        }
+      })
+    });
+    if (!res.ok) {
+      var errData = await res.json().catch(function(){ return {}; });
+      throw new Error(errData.message || ('HTTP ' + res.status + ' — check your Anam API key'));
+    }
+    var data = await res.json();
+    sessionToken = data.sessionToken;
+  } catch(e) {
+    setAvOverlay(true, '❌ ' + e.message);
+    setAvStatus('❌', 'Auth failed');
+    toast('⚠ Anam: ' + e.message);
+    return;
+  }
+
+  setAvOverlay(true, '<div class="avp-spinner"></div>Starting avatar stream…');
+
+  try {
+    window._anamClient = window._AnamCreateClient(sessionToken);
+
+    window._anamClient.addListener(window._AnamEvent.CONNECTION_ESTABLISHED, function() {
+      window._avatarConnected = true;
+      setAvOverlay(false);
+      setAvStatus('🟢', 'Avatar live — responses spoken by avatar');
+      toast('🤖 Govinda AI Avatar connected!');
+      // unmute video so avatar audio plays
+      var vid = document.getElementById('avatar-video');
+      if (vid) vid.muted = false;
+    });
+
+    window._anamClient.addListener(window._AnamEvent.CONNECTION_CLOSED, function() {
+      window._avatarConnected = false;
+      setAvOverlay(true, 'Connection closed. Click <b>Apply</b> to reconnect.');
+      setAvStatus('💤', 'Disconnected');
+    });
+
+    await window._anamClient.streamToVideoElement('avatar-video');
+
+  } catch(e) {
+    setAvOverlay(true, '❌ Stream error: ' + e.message);
+    setAvStatus('❌', 'Stream failed');
+    toast('⚠ Anam stream: ' + e.message);
+    console.error('Anam stream error:', e);
+  }
+}
+
+function stopAvatarSession() {
+  if (window._anamClient) {
+    try { window._anamClient.stopStreaming(); } catch(_) {}
+    window._anamClient = null;
+  }
+  window._avatarConnected = false;
+  setAvStatus('💤', 'Avatar disconnected');
+  setAvOverlay(true, 'Avatar stopped. Click Avatar button to restart.');
+}
+
+function avatarSpeak(text, bubbleEl) {
+  if (!window._anamClient || !window._avatarConnected) return;
+  var clean = cleanForSpeech(text || '');
+  if (!clean) return;
+  // Keep spoken text to a reasonable length
+  var spoken = clean.length > 450 ? clean.slice(0, 447) + '...' : clean;
+  try {
+    window._anamClient.talk(spoken);
+    setAvStatus('🗣️', 'Speaking…');
+    // Glow effect on bubble
+    if (bubbleEl) {
+      bubbleEl.classList.add('speaking');
+      var dur = Math.max(2000, spoken.length * 60);
+      setTimeout(function() { bubbleEl.classList.remove('speaking'); }, dur);
+    }
+    var resetDur = Math.max(2500, spoken.length * 65);
+    setTimeout(function() {
+      if (window._avatarConnected) setAvStatus('👂', 'Listening…');
+    }, resetDur);
+  } catch(e) {
+    console.warn('avatarSpeak error:', e);
+  }
+}
+// ══════════════════════════════════════════════════════════
+// END ANAM.AI AVATAR
+// ══════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════
+// QUICK SEARCH DRAWER TOGGLE
+// ══════════════════════════════════════════════════════════
+function toggleQsDrawer() {
+  var drawer = document.getElementById('qs-drawer');
+  var btn    = document.getElementById('qs-toggle-btn');
+  var isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    drawer.classList.remove('open');
+    btn.classList.remove('open');
+  } else {
+    drawer.classList.add('open');
+    btn.classList.add('open');
+    // Avatar points down gesture when drawer opens
+    if (window.avatarSetState) window.avatarSetState('presentDown');
+  }
+}
+function closeQsDrawer() {
+  document.getElementById('qs-drawer').classList.remove('open');
+  document.getElementById('qs-toggle-btn').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════════════
+// LEFT AVATAR — ANIMATION ENGINE (Enhanced v2)
+// ══════════════════════════════════════════════════════════
+(function() {
+  var _avatarState = 'idle';
+  var _blinkTimer = null, _breatheTimer = null, _talkAnim = null;
+  var _stateTimer = null;
+
+  function el(id) { return document.getElementById(id); }
+
+  // ── Status label ──
+  function setLeftStatus(text) {
+    var t = el('avatar-left-status-text');
+    if (t) t.textContent = text;
+  }
+
+  // ── Blink ──
+  function doBlink() {
+    var bl = el('av-blink-l'), br = el('av-blink-r');
+    if (!bl || !br) return;
+    bl.setAttribute('height', '18'); br.setAttribute('height', '18');
+    setTimeout(function() { bl.setAttribute('height','0'); br.setAttribute('height','0'); }, 120);
+  }
+  function startBlink() {
+    clearInterval(_blinkTimer);
+    _blinkTimer = setInterval(function() {
+      if (_avatarState !== 'thinking') {
+        doBlink();
+        if (Math.random() < 0.2) setTimeout(doBlink, 300);
+      }
+    }, 3000 + Math.random() * 2200);
+  }
+
+  // ── Idle breathing bob ──
+  function startIdleBreath() {
+    var head = el('av-head'), torso = el('av-torso');
+    if (!head) return;
+    var y = 0, dir = 1;
+    clearInterval(_breatheTimer);
+    _breatheTimer = setInterval(function() {
+      if (_avatarState !== 'idle') return;
+      y += dir * 0.12;
+      if (y >= 1.8) dir = -1;
+      if (y <= 0) dir = 1;
+      head.setAttribute('transform', 'translate(0,' + y.toFixed(2) + ')');
+    }, 45);
+  }
+
+  // ── Mouth talk ──
+  function startTalking() {
+    var mc = el('av-mouth-closed'), mo = el('av-mouth-open'), mi = el('av-mouth-inner');
+    var sw = el('av-speak-waves');
+    if (sw) { sw.style.transition='opacity 0.2s'; sw.style.opacity='1'; }
+    clearInterval(_talkAnim);
+    var open = false;
+    _talkAnim = setInterval(function() {
+      open = !open;
+      if (mc) mc.setAttribute('opacity', open ? '0' : '1');
+      if (mo) mo.setAttribute('opacity', open ? '1' : '0');
+      if (mi) { mi.setAttribute('opacity', open ? '1' : '0'); mi.setAttribute('ry', open ? (2+Math.random()*4).toFixed(1) : '0'); }
+    }, 110 + Math.floor(Math.random()*70));
+  }
+  function stopTalking() {
+    clearInterval(_talkAnim); _talkAnim = null;
+    var mc = el('av-mouth-closed'), mo = el('av-mouth-open'), mi = el('av-mouth-inner');
+    var sw = el('av-speak-waves');
+    if (sw) { sw.style.transition='opacity 0.3s'; sw.style.opacity='0'; }
+    if (mc) mc.setAttribute('opacity','1');
+    if (mo) mo.setAttribute('opacity','0');
+    if (mi) mi.setAttribute('opacity','0');
+  }
+
+  // ── Thinking tilt ──
+  function thinkingTilt() {
+    var head = el('av-head');
+    if (head) head.setAttribute('transform','rotate(-7,100,130)');
+    var sb = el('av-status-bubble'), st = el('av-status-txt');
+    if (sb) { sb.style.transition='opacity 0.3s'; sb.style.opacity='1'; }
+    if (st) st.textContent = 'Thinking…';
+  }
+  function clearThinking() {
+    var head = el('av-head');
+    if (head) head.setAttribute('transform','');
+    var sb = el('av-status-bubble');
+    if (sb) { sb.style.transition='opacity 0.3s'; sb.style.opacity='0'; }
+  }
+
+  // ── Nod ──
+  function nod() {
+    var head = el('av-head');
+    if (!head) return;
+    var steps = [0,5,-3,4,-1,0], i = 0;
+    var t = setInterval(function() {
+      if (i >= steps.length) { clearInterval(t); head.setAttribute('transform',''); return; }
+      head.setAttribute('transform', 'translate(0,' + steps[i++] + ')');
+    }, 80);
+  }
+
+  // ─────────────────────────────────────────────
+  // ── WAVE HELLO / BYE (right arm swings up & waves) ──
+  // ─────────────────────────────────────────────
+  function waveArm(times, onDone) {
+    var arm = el('av-arm-right');
+    if (!arm) { if(onDone) onDone(); return; }
+    // Lift arm up first
+    var liftSteps = [0,-10,-22,-34,-45], liftIdx = 0;
+    var liftT = setInterval(function() {
+      arm.setAttribute('transform', 'rotate(' + liftSteps[liftIdx] + ',148,188)');
+      liftIdx++;
+      if (liftIdx >= liftSteps.length) {
+        clearInterval(liftT);
+        // Now wave left-right N times
+        var waveCount = 0, waveDir = 1, angle = -45, waveTick = 0;
+        var waveT = setInterval(function() {
+          angle += waveDir * 8;
+          arm.setAttribute('transform', 'rotate(' + angle + ',148,188)');
+          if (Math.abs(angle + 45) >= 22 || Math.abs(angle + 45) <= 0) {
+            waveDir = -waveDir;
+            waveTick++;
+            if (waveTick >= times * 2) {
+              clearInterval(waveT);
+              // Lower arm back down
+              var lower = [-45,-34,-22,-10,0], li = 0;
+              var lowerT = setInterval(function() {
+                arm.setAttribute('transform', 'rotate(' + lower[li] + ',148,188)');
+                li++;
+                if (li >= lower.length) { clearInterval(lowerT); arm.setAttribute('transform',''); if(onDone) onDone(); }
+              }, 35);
+            }
+          }
+        }, 55);
+      }
+    }, 30);
+  }
+
+  // ─────────────────────────────────────────────
+  // ── PRESENT DATA: arm sweeps top→bottom (like "here's the data") ──
+  // ─────────────────────────────────────────────
+  function presentDataGesture(onDone) {
+    var arm = el('av-arm-right');
+    if (!arm) { if(onDone) onDone(); return; }
+    // Sweep from top (raised) to bottom (pointing down)
+    // Steps: neutral → raised up → sweep down through range → back to neutral
+    var seq = [
+      {a: 0,   dur: 30},
+      {a: -30, dur: 40},
+      {a: -50, dur: 40},
+      {a: -60, dur: 35},  // pointing up-ish (top of data)
+      {a: -40, dur: 50},
+      {a: -20, dur: 50},
+      {a:   0, dur: 55},  // mid-point
+      {a:  20, dur: 55},
+      {a:  35, dur: 50},  // pointing down (bottom of data)
+      {a:  20, dur: 40},
+      {a:   0, dur: 40},  // return to neutral
+    ];
+    var idx = 0;
+    function next() {
+      if (idx >= seq.length) { arm.setAttribute('transform',''); if(onDone) onDone(); return; }
+      var s = seq[idx++];
+      arm.setAttribute('transform', 'rotate(' + s.a + ',148,188)');
+      setTimeout(next, s.dur);
+    }
+    next();
+  }
+
+  // ─────────────────────────────────────────────
+  // ── POINT DOWN (open drawer gesture) ──
+  // ─────────────────────────────────────────────
+  function pointDownGesture(onDone) {
+    var arm = el('av-arm-right');
+    if (!arm) { if(onDone) onDone(); return; }
+    var seq = [0, 15, 30, 40, 30, 15, 0];
+    var idx = 0;
+    var t = setInterval(function() {
+      if (idx >= seq.length) { clearInterval(t); arm.setAttribute('transform',''); if(onDone) onDone(); return; }
+      arm.setAttribute('transform', 'rotate(' + seq[idx++] + ',148,188)');
+    }, 55);
+  }
+
+  // ─────────────────────────────────────────────
+  // ── STATE MACHINE ──
+  // ─────────────────────────────────────────────
+  window.avatarSetState = function(state) {
+    _avatarState = state;
+    clearTimeout(_stateTimer);
+
+    switch(state) {
+      case 'thinking':
+        stopTalking(); thinkingTilt(); doBlink();
+        setLeftStatus('Thinking…');
+        break;
+
+      case 'talking':
+        clearThinking(); startTalking();
+        setLeftStatus('Speaking…');
+        _stateTimer = setTimeout(function() { if (_avatarState === 'talking') nod(); }, 1800 + Math.random()*1500);
+        break;
+
+      case 'listening':
+        stopTalking(); clearThinking();
+        var head = el('av-head');
+        if (head) head.setAttribute('transform','rotate(5,100,130)');
+        setLeftStatus('Listening…');
+        _stateTimer = setTimeout(function() { if (_avatarState === 'listening' && head) head.setAttribute('transform',''); }, 2000);
+        break;
+
+      case 'waveHello':
+        stopTalking(); clearThinking();
+        var sb = el('av-status-bubble'), st = el('av-status-txt');
+        if (sb) { sb.style.opacity='1'; sb.style.transition='opacity 0.3s'; }
+        if (st) st.textContent = 'Hello! 👋';
+        setLeftStatus('Saying hello 👋');
+        waveArm(3, function() {
+          if (sb) { sb.style.opacity='0'; }
+          window.avatarSetState('idle');
+        });
+        break;
+
+      case 'waveBye':
+        stopTalking(); clearThinking();
+        var sb2 = el('av-status-bubble'), st2 = el('av-status-txt');
+        if (sb2) { sb2.style.opacity='1'; sb2.style.transition='opacity 0.3s'; }
+        if (st2) st2.textContent = 'Goodbye! 👋';
+        setLeftStatus('Waving bye 👋');
+        waveArm(4, function() {
+          if (sb2) { sb2.style.opacity='0'; }
+          window.avatarSetState('idle');
+        });
+        break;
+
+      case 'presentData':
+        stopTalking(); clearThinking();
+        setLeftStatus('Presenting data…');
+        presentDataGesture(function() {
+          if (_avatarState === 'presentData') window.avatarSetState('talking');
+        });
+        break;
+
+      case 'presentDown':
+        clearThinking();
+        setLeftStatus('Here you go ↓');
+        pointDownGesture(function() {
+          if (_avatarState === 'presentDown') window.avatarSetState('idle');
+        });
+        break;
+
+      case 'idle':
+      default:
+        _avatarState = 'idle';
+        stopTalking(); clearThinking();
+        setLeftStatus('Ready to help you');
+        break;
+    }
+  };
+
+  // ── Boot ──
+  document.addEventListener('DOMContentLoaded', function() {
+    startBlink();
+    startIdleBreath();
+    // Wave hello after splash clears
+    setTimeout(function() { window.avatarSetState('waveHello'); }, 5200);
+  });
+
+  // ── Detect hi/hello and bye in spoken/typed text ──
+  var _origBotMsg;
+  window._avatarTextCheck = function(text) {
+    if (!text) return;
+    var lower = text.toLowerCase();
+    var hasHi  = /\b(hello|hi|hey|good morning|good afternoon|good evening|namaste)\b/.test(lower);
+    var hasBye = /\b(bye|goodbye|see you|take care|farewell)\b/.test(lower);
+    if (hasHi)  setTimeout(function() { window.avatarSetState('waveHello'); }, 400);
+    if (hasBye) setTimeout(function() { window.avatarSetState('waveBye'); }, 400);
+  };
+
+  // ── Detect data presentation (cards rendered) ──
+  window._avatarOnDataPresented = function() {
+    window.avatarSetState('presentData');
+  };
+
+  // ── Monitor voice-bar for speaking/listening states ──
+  var _voiceBarObserver = new MutationObserver(function(muts) {
+    muts.forEach(function(m) {
+      if (m.type === 'attributes' && m.attributeName === 'class') {
+        var bar = el('voice-bar');
+        if (!bar) return;
+        if (bar.classList.contains('active')) {
+          var icon = el('vbar-icon');
+          if (icon && icon.textContent === '🔊') {
+            window.avatarSetState('talking');
+          } else {
+            window.avatarSetState('listening');
+          }
+        } else {
+          if (_avatarState === 'listening' || _avatarState === 'talking') {
+            window.avatarSetState('idle');
+          }
+        }
+      }
+    });
+  });
+
+  // ── Monitor msgs container for typing indicator & new bot messages ──
+  var _msgsObserver = new MutationObserver(function(muts) {
+    muts.forEach(function(m) {
+      m.addedNodes.forEach(function(n) {
+        if (n.nodeType !== 1) return;
+        if (n.id === 'typr') {
+          window.avatarSetState('thinking');
+        } else if (n.classList && n.classList.contains('msg') && n.classList.contains('bot') && n.id !== 'typr') {
+          // Check for card grids (data presented)
+          var hasCards = n.querySelectorAll && n.querySelectorAll('.card').length > 0;
+          // Check bubble text for greetings/byes
+          var bubTxt = n.querySelector('.bub') ? n.querySelector('.bub').textContent : '';
+          window._avatarTextCheck(bubTxt);
+          nod();
+          // If data cards found, do presentData gesture
+          setTimeout(function() {
+            if (el('msgs').querySelectorAll('.card').length > 0 && !hasCards) {
+              window.avatarSetState('presentData');
+            } else if (window.speechSynthesis && window.speechSynthesis.speaking) {
+              window.avatarSetState('talking');
+            }
+          }, 200);
+        }
+        // Detect card grid rendered in msgs
+        if (n.classList && n.classList.contains('grid')) {
+          window.avatarSetState('presentData');
+        }
+      });
+      m.removedNodes.forEach(function(n) {
+        if (n.nodeType === 1 && n.id === 'typr') {
+          clearThinking();
+        }
+      });
+    });
+  });
+
+  // ── Also watch for .grid appearing anywhere in msgs ──
+  window.addEventListener('load', function() {
+    var vb = el('voice-bar');
+    if (vb) _voiceBarObserver.observe(vb, {attributes: true});
+    var msgs = el('msgs');
+    if (msgs) _msgsObserver.observe(msgs, {childList: true, subtree: true});
+
+    // Poll synth
+    setInterval(function() {
+      if (window.speechSynthesis) {
+        var speaking = window.speechSynthesis.speaking;
+        if (speaking && _avatarState !== 'talking' && _avatarState !== 'waveHello' && _avatarState !== 'waveBye' && _avatarState !== 'presentData' && _avatarState !== 'presentDown') {
+          window.avatarSetState('talking');
+        } else if (!speaking && _avatarState === 'talking') {
+          window.avatarSetState('idle');
+        }
+      }
+    }, 200);
+  });
+})();
+// ══════════════════════════════════════════════════════════
+// END LEFT AVATAR ANIMATION ENGINE v2
+// ══════════════════════════════════════════════════════════
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const hour = new Date().getHours();
+    const timeGreet = hour < 12 ? "Good morning!" : hour < 17 ? "Good afternoon!" : "Good evening!";
+
+    const d = document.createElement('div'); d.className = 'msg bot';
+    d.innerHTML = `<div class="av">🧑‍⚕️</div><div class="bub">
+      <b>${timeGreet}</b> I am <b>Govinda AI</b>, your healthcare assistant for RKJ Labs, Noida. 😊<br><br>
+      I can help you find nearby <b>pharmacies</b>, <b>government hospitals</b>, <b>private hospitals</b>, <b>NGOs</b>, and <b>polyclinics</b> — or answer any questions about RKJ Labs.<br><br>
+      You can also ask me to <b>download an Excel file</b> of results, or use the <b>filter</b> to narrow them down.<br><br>
+      <span style="color:var(--accent)">What should I help you with today?</span>
+    </div>`;
+    document.getElementById('msgs').appendChild(d); scrollBot();
+
+    // Store greeting for deferred playback (Chrome blocks audio before user interaction)
+    _greetText = `${timeGreet} I am Govinda AI, your healthcare assistant for RKJ Labs in Noida. What should I help you with today?`;
+    _greetBubble = d.querySelector('.bub');
+  }, 800);
+});
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     ANAM.AI AVATAR PANEL
+     ══════════════════════════════════════════════════════ -->
+<div id="avatar-panel">
+  <div id="avatar-panel-header">
+    <div class="avp-left">
+      <div class="avp-live-dot"></div>
+      <span class="avp-label">Govinda AI Avatar</span>
+    </div>
+    <div class="avp-btns">
+      <button class="avp-btn" onclick="minimizeAvatar()" title="Minimise">—</button>
+      <button class="avp-btn" onclick="toggleAvatarPanel()" title="Close">✕</button>
+    </div>
+  </div>
+  <div id="avatar-video-wrap">
+    <video id="avatar-video" autoplay playsinline></video>
+    <div id="avatar-overlay">
+      <div style="font-size:28px;margin-bottom:8px">🤖</div>
+      <div id="avatar-overlay-text">Enter your <b>Anam API key</b> in the config bar above and click <b>Apply</b>, then click <b>Avatar</b> to start</div>
+    </div>
+  </div>
+  <div id="avatar-status-bar">
+    <span id="avatar-status-icon">💤</span>
+    <span id="avatar-status-text">Avatar not connected</span>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// EXOTEL OUTBOUND CALLING — Govinda AI Integration
+// Credentials: xpertnoteanalytics1 / 09513886363
+// ═══════════════════════════════════════════════════════════
+
+const EXOTEL_CONFIG = {
+  apiKey    : '49247f52bc1daecb864dd16663e55c8eac997c200bc4e8ae',
+  apiToken  : 'e0843eaed23d3a3e725b193ae6131130da6825ca39fe4934',
+  accountSid: 'xpertnoteanalytics1',
+  subdomain : 'api.exotel.com',
+  exophone  : '09513886363',
+};
+
+// ── Panel state ──────────────────────────────────────────
+let _cpOpen    = false;
+let _cpTab     = 'single';
+let _bulkRunning = false;
+let _callLog   = [];
+
+// ── Tab switch ───────────────────────────────────────────
+function switchCpTab(tab) {
+  _cpTab = tab;
+  ['single','bulk','log'].forEach(t => {
+    document.getElementById('cptab-body-' + t).style.display = (t === tab) ? 'flex' : 'none';
+    document.getElementById('cptab-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'log') renderCallLog();
+}
+
+// ── Panel toggle ─────────────────────────────────────────
+function toggleCallPanel() {
+  _cpOpen = !_cpOpen;
+  const panel = document.getElementById('call-panel');
+  const fab   = document.getElementById('call-fab');
+  if (_cpOpen) {
+    panel.style.display = 'flex';
+    requestAnimationFrame(() => panel.classList.add('visible'));
+    fab.textContent = '✕';
+    fab.classList.add('active');
+    fab.style.animation = 'none';
+  } else {
+    panel.classList.remove('visible');
+    fab.textContent = '📞';
+    fab.classList.remove('active');
+    fab.style.animation = '';
+    setTimeout(() => { panel.style.display = 'none'; }, 300);
+  }
+}
+
+// ── Status helper ────────────────────────────────────────
+function setCpStatus(elementId, txtId, message, type='success') {
+  const el  = document.getElementById(elementId);
+  const txt = document.getElementById(txtId);
+  if (!el || !txt) return;
+  el.className = 'cp-status visible ' + (type === 'error' ? 'error' : type === 'warning' ? 'warning' : '');
+  txt.textContent = message;
+}
+
+function hideCpStatus(elementId) {
+  const el = document.getElementById(elementId);
+  if (el) el.classList.remove('visible');
+}
+
+// ── Call log ─────────────────────────────────────────────
+function addLog(type, msg) {
+  const now = new Date();
+  const ts  = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+  _callLog.unshift({ ts, type, msg });
+  if (_callLog.length > 50) _callLog.pop();
+  if (_cpTab === 'log') renderCallLog();
+}
+
+function renderCallLog() {
+  const log = document.getElementById('cp-log');
+  if (!log) return;
+  if (_callLog.length === 0) {
+    log.innerHTML = '<div class="log-line"><span class="log-ts">--:--</span><span class="log-info">No calls yet.</span></div>';
+    return;
+  }
+  log.innerHTML = _callLog.map(l =>
+    `<div class="log-line"><span class="log-ts">${l.ts}</span><span class="log-${l.type}">${l.msg}</span></div>`
+  ).join('');
+}
+
+function clearCallLog() {
+  _callLog = [];
+  renderCallLog();
+}
+
+// ══════════════════════════════════════════════════════════
+// EXOTEL CALLER — Standalone / No-backend mode
+// Calls Exotel API through multiple strategies:
+// 1. Direct fetch (works if page is served from localhost / a backend)
+// 2. A set of reliable CORS proxy services (tried in sequence)
+// 3. Falls back to a one-click curl command
+// ══════════════════════════════════════════════════════════
+
+async function callExotelAPI(toNumber, customField) {
+  const { apiKey, apiToken, accountSid, subdomain, exophone } = EXOTEL_CONFIG;
+
+  const exoUrl = `https://${subdomain}/v1/Accounts/${accountSid}/Calls.json`;
+
+  const body = new URLSearchParams({
+    From             : exophone,
+    To               : toNumber,
+    CallerId         : exophone,
+    CustomField      : customField || 'RKJ_LABS_FEEDBACK',
+    Record           : 'true',
+    RecordingChannels: 'dual',
+  });
+
+  const bodyStr = body.toString();
+
+  // Encode credentials for Basic Auth header
+  const creds = btoa(`${apiKey}:${apiToken}`);
+
+  // ── Strategy list (tried in order) ─────────────────────────
+  const strategies = [
+
+    // Strategy 1: Local Flask backend (python app.py) — no CORS, most reliable
+    {
+      name: 'Local backend (app.py)',
+      fn: async () => {
+        const res = await fetch('http://localhost:5000/call', {
+          method : 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body   : bodyStr,
+        });
+        return res;
+      }
+    },
+
+    // Strategy 2: corsproxy.io
+    {
+      name: 'corsproxy.io',
+      fn: async () => {
+        const url = `https://corsproxy.io/?url=${encodeURIComponent(exoUrl)}`;
+        return fetch(url, {
+          method : 'POST',
+          headers: {
+            'Content-Type' : 'application/x-www-form-urlencoded',
+            'x-requested-with': 'XMLHttpRequest',
+            'Authorization': `Basic ${creds}`,
+          },
+          body: bodyStr,
+        });
+      }
+    },
+
+    // Strategy 3: cors-anywhere (public demo — may need header)
+    {
+      name: 'cors-anywhere',
+      fn: async () => {
+        const url = `https://cors-anywhere.herokuapp.com/${exoUrl}`;
+        return fetch(url, {
+          method : 'POST',
+          headers: {
+            'Content-Type'     : 'application/x-www-form-urlencoded',
+            'Authorization'    : `Basic ${creds}`,
+            'X-Requested-With' : 'XMLHttpRequest',
+          },
+          body: bodyStr,
+        });
+      }
+    },
+
+    // Strategy 4: allorigins (GET-only proxy — encode as URL param)
+    {
+      name: 'allorigins',
+      fn: async () => {
+        // allorigins only supports GET, so we embed creds in URL and use a workaround
+        // We post through the raw endpoint with credentials in the URL
+        const authedUrl = `https://${apiKey}:${apiToken}@${subdomain}/v1/Accounts/${accountSid}/Calls.json`;
+        const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(authedUrl + '?' + bodyStr)}`;
+        const res = await fetch(url);
+        // allorigins returns the body as-is; Exotel GET won't create a call,
+        // so treat non-JSON / error gracefully
+        if (!res.ok) throw new Error(`allorigins HTTP ${res.status}`);
+        const text = await res.text();
+        const json = JSON.parse(text);
+        return { ok: true, json: async () => json };
+      }
+    },
+
+    // Strategy 5: Cloudflare worker proxy (generic public worker)
+    {
+      name: 'worker.bridged.cc',
+      fn: async () => {
+        const url = `https://worker.bridged.cc/${exoUrl}`;
+        return fetch(url, {
+          method : 'POST',
+          headers: {
+            'Content-Type' : 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${creds}`,
+          },
+          body: bodyStr,
+        });
+      }
+    },
+
+    // Strategy 6: crossorigin.me proxy
+    {
+      name: 'crossorigin.me',
+      fn: async () => {
+        const url = `https://crossorigin.me/${exoUrl}`;
+        return fetch(url, {
+          method : 'POST',
+          headers: {
+            'Content-Type' : 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${creds}`,
+          },
+          body: bodyStr,
+        });
+      }
+    },
+
+  ];
+
+  let lastErr = null;
+
+  for (let i = 0; i < strategies.length; i++) {
+    const { name, fn } = strategies[i];
+    try {
+      addLog('info', `Trying [${i + 1}/${strategies.length}] ${name}…`);
+      const res = await fn();
+
+      // Some strategies return a pre-parsed object
+      if (res && typeof res.json === 'function' && res.ok !== false) {
+        if (res.ok === true || res.status === undefined || (res.status >= 200 && res.status < 300)) {
+          const data = await res.json();
+          if (data && (data.Call || data.call || data.sid || data.Sid)) {
+            addLog('ok', `✅ ${name} succeeded`);
+            // Normalise to always have data.Call
+            if (!data.Call && (data.call || data.sid || data.Sid)) {
+              data.Call = data.call || { Sid: data.sid || data.Sid, Status: data.status || 'initiated' };
+            }
+            return data;
+          }
+          // Got JSON but no Call object — log and try next
+          addLog('err', `${name}: Unexpected response — ${JSON.stringify(data).slice(0,80)}`);
+          lastErr = new Error(`${name}: Unexpected API response`);
+          continue;
+        } else {
+          const txt = await res.text().catch(() => '');
+          lastErr = new Error(`${name} HTTP ${res.status}: ${txt.slice(0, 120)}`);
+          addLog('err', `${name} failed (HTTP ${res.status}): ${txt.slice(0,60)}`);
+          continue;
+        }
+      }
+
+    } catch (e) {
+      lastErr = e;
+      // CORS errors show as TypeError with no useful message; flag them clearly
+      const isCors = e instanceof TypeError && (e.message.includes('fetch') || e.message === 'Failed to fetch' || e.message === 'Load failed');
+      addLog('err', `${name} failed${isCors ? ' (CORS blocked)' : ''}: ${e.message.slice(0, 80)}`);
+    }
+  }
+
+  // ── All strategies failed → show curl + cloudflare worker tip ──────
+  _showCurlFallback(toNumber, customField);
+  throw new Error('All CORS proxies failed. See curl command in chat to trigger call manually.');
+}
+
+// Shows a copy-able curl command as a last resort
+function _showCurlFallback(toNumber, customField) {
+  const { apiKey, apiToken, accountSid, subdomain, exophone } = EXOTEL_CONFIG;
+  const cmd = `curl -X POST \\
+  https://${apiKey}:${apiToken}@${subdomain}/v1/Accounts/${accountSid}/Calls.json \\
+  -d "From=${exophone}" \\
+  -d "To=${toNumber}" \\
+  -d "CallerId=${exophone}" \\
+  -d "CustomField=${customField || 'RKJ_LABS_FEEDBACK'}" \\
+  -d "Record=true"`;
+
+  const d = document.createElement('div');
+  d.className = 'msg bot';
+  d.innerHTML = `<div class="av">🧑‍⚕️</div><div class="bub">
+    ⚠️ <b>CORS proxy unavailable.</b> Run this curl command to make the call:<br><br>
+    <code style="display:block;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+      padding:10px;font-size:10px;line-height:1.7;white-space:pre-wrap;color:var(--accent3);word-break:break-all">${cmd}</code>
+    <button onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>toast('✅ Copied!'))"
+      style="margin-top:8px;padding:5px 14px;background:rgba(0,255,153,.12);border:1px solid rgba(0,255,153,.3);
+        border-radius:7px;color:var(--accent3);font-size:11px;font-weight:700;cursor:pointer;">
+      📋 Copy Command
+    </button>
+    <span style="display:block;margin-top:6px;font-size:10px;color:var(--text-muted)">
+      💡 <b style="color:var(--violet)">Permanent fix:</b> Deploy a free Cloudflare Worker as your own CORS proxy, or run <code style="color:var(--violet)">python app.py</code> (the Flask backend) for seamless calling.
+    </span>
+  </div>`;
+  document.getElementById('msgs').appendChild(d);
+  document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+}
+
+// ── Single call ──────────────────────────────────────────
+async function triggerSingleCall() {
+  const phone = document.getElementById('cp-phone').value.trim();
+  const custom = document.getElementById('cp-custom-msg').value.trim();
+
+  if (!phone) {
+    setCpStatus('cp-status-single','cp-status-txt','⚠️ Enter a phone number first','warning');
+    return;
+  }
+
+  const formatted = phone.startsWith('+') ? phone : ('+91' + phone.replace(/^0/, ''));
+
+  const btn = document.getElementById('cp-call-btn');
+  btn.disabled = true;
+  btn.classList.add('calling');
+  btn.innerHTML = '⏳ Connecting…';
+  setCpStatus('cp-status-single','cp-status-txt','Connecting to Exotel…');
+  addLog('info', `Initiating call → ${formatted}`);
+
+  // Also show in chat
+  const chatDiv = document.createElement('div');
+  chatDiv.className = 'msg bot';
+  chatDiv.innerHTML = `<div class="av">🧑‍⚕️</div><div class="bub">📞 <b>Outbound call initiated</b> to <b>${formatted}</b> via Exotel.<br><span style="font-size:11px;color:var(--text-muted)">Govinda AI will collect patient feedback in Hinglish.</span></div>`;
+  document.getElementById('msgs').appendChild(chatDiv);
+  document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+
+  try {
+    const data = await callExotelAPI(formatted, custom || 'RKJ_LABS_FEEDBACK');
+    const call = data.Call || {};
+    const sid  = call.Sid || 'N/A';
+    const status = call.Status || 'initiated';
+
+    setCpStatus('cp-status-single','cp-status-txt',`✅ Call started! SID: ${sid}`);
+    addLog('ok', `✅ Called ${formatted} | SID: ${sid} | Status: ${status}`);
+
+    // Update chat bubble
+    chatDiv.querySelector('.bub').innerHTML =
+      `📞 <b>Call connected!</b><br>
+       To: <b>${formatted}</b><br>
+       SID: <code style="font-size:10px;color:var(--accent)">${sid}</code> · Status: <b style="color:#00e676">${status}</b><br>
+       <span style="font-size:11px;color:var(--text-muted)">Govinda AI is collecting feedback in Hinglish.</span>`;
+
+    toast('✅ Call initiated to ' + formatted);
+
+  } catch (err) {
+    const msg = err.message || 'Unknown error';
+    setCpStatus('cp-status-single','cp-status-txt','❌ ' + msg, 'error');
+    addLog('err', `❌ Failed to call ${formatted}: ${msg}`);
+    chatDiv.querySelector('.bub').innerHTML =
+      `❌ <b>Call failed</b> for ${formatted}<br><span style="font-size:11px;color:var(--red)">${msg}</span><br><span style="font-size:10px;color:var(--text-muted)">If you see a CORS error, please use the Python backend script instead.</span>`;
+    toast('❌ Call failed: ' + msg.slice(0,40));
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('calling');
+    btn.innerHTML = '📞 Call Patient Now';
+  }
+}
+
+// ── Bulk calls ───────────────────────────────────────────
+async function triggerBulkCalls() {
+  if (_bulkRunning) {
+    _bulkRunning = false;
+    document.getElementById('cp-bulk-btn').innerHTML = '📋 Start Bulk Calling';
+    setCpStatus('cp-status-bulk','cp-status-bulk-txt','⏹ Stopped by user','warning');
+    return;
+  }
+
+  const raw   = document.getElementById('cp-bulk-nums').value.trim();
+  const delay = Math.max(3, parseInt(document.getElementById('cp-bulk-delay').value) || 5);
+
+  if (!raw) {
+    setCpStatus('cp-status-bulk','cp-status-bulk-txt','⚠️ Enter phone numbers first','warning');
+    return;
+  }
+
+  const numbers = raw.split('\n')
+    .map(n => n.trim())
+    .filter(n => n.length > 7)
+    .map(n => n.startsWith('+') ? n : ('+91' + n.replace(/^0/,'')));
+
+  if (numbers.length === 0) {
+    setCpStatus('cp-status-bulk','cp-status-bulk-txt','⚠️ No valid numbers found','warning');
+    return;
+  }
+
+  _bulkRunning = true;
+  const btn = document.getElementById('cp-bulk-btn');
+  btn.innerHTML = '⏹ Stop Bulk Calling';
+  btn.classList.add('calling');
+
+  const progress = document.getElementById('cp-bulk-progress');
+  progress.classList.add('visible');
+
+  let success = 0, failed = 0;
+
+  for (let i = 0; i < numbers.length; i++) {
+    if (!_bulkRunning) break;
+
+    const num = numbers[i];
+    const pct = Math.round((i / numbers.length) * 100);
+    document.getElementById('cp-prog-bar').style.width = pct + '%';
+    document.getElementById('cp-prog-label').textContent = `${i} / ${numbers.length} — Calling ${num}…`;
+    setCpStatus('cp-status-bulk','cp-status-bulk-txt',`Calling ${i+1}/${numbers.length}: ${num}`);
+    addLog('info', `[${i+1}/${numbers.length}] Calling ${num}…`);
+
+    try {
+      const data = await callExotelAPI(num, 'RKJ_BULK_FEEDBACK');
+      const sid  = (data.Call || {}).Sid || 'N/A';
+      addLog('ok', `✅ ${num} | SID: ${sid}`);
+      success++;
+    } catch(err) {
+      addLog('err', `❌ ${num}: ${err.message.slice(0,60)}`);
+      failed++;
+    }
+
+    if (i < numbers.length - 1 && _bulkRunning) {
+      await new Promise(r => setTimeout(r, delay * 1000));
+    }
+  }
+
+  _bulkRunning = false;
+  document.getElementById('cp-prog-bar').style.width = '100%';
+  document.getElementById('cp-prog-label').textContent = `Done: ${success} succeeded, ${failed} failed`;
+  setCpStatus('cp-status-bulk','cp-status-bulk-txt',`✅ Done — ${success} called, ${failed} failed`);
+  btn.innerHTML = '📋 Start Bulk Calling';
+  btn.disabled = false;
+  btn.classList.remove('calling');
+
+  // Summary in chat
+  const summary = document.createElement('div');
+  summary.className = 'msg bot';
+  summary.innerHTML = `<div class="av">🧑‍⚕️</div><div class="bub">
+    📋 <b>Bulk calling complete!</b><br>
+    ✅ Success: <b style="color:#00e676">${success}</b> &nbsp;|&nbsp; ❌ Failed: <b style="color:var(--red)">${failed}</b><br>
+    <span style="font-size:11px;color:var(--text-muted)">Govinda AI called ${numbers.length} patients for RKJ Labs feedback.</span>
+  </div>`;
+  document.getElementById('msgs').appendChild(summary);
+  document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+  toast(`✅ Bulk calls done — ${success} success, ${failed} failed`);
+}
+
+// ── Keyboard shortcut: Ctrl+Shift+C to open call panel ──
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+    e.preventDefault();
+    toggleCallPanel();
+  }
+});
+
+// ── Chat intent: detect "call <number>" in chat messages ─
+// Monkey-patch the existing send() after it's defined
+const _origSend = window.send;
+window.send = async function() {
+  const inp = document.getElementById('inp');
+  const text = inp ? inp.value.trim() : '';
+  const callMatch = text.match(/(?:call|phone|ring|dial)\s*(\+?\d[\d\s\-]{8,14})/i);
+  if (callMatch) {
+    const num = callMatch[1].replace(/\s|-/g,'');
+    inp.value = '';
+    const chatDiv = document.createElement('div');
+    chatDiv.className = 'msg user';
+    chatDiv.innerHTML = `<div class="av">👤</div><div class="bub">${text}</div>`;
+    document.getElementById('msgs').appendChild(chatDiv);
+
+    const replyDiv = document.createElement('div');
+    replyDiv.className = 'msg bot';
+    replyDiv.innerHTML = `<div class="av">🧑‍⚕️</div><div class="bub">📞 Got it! Calling <b>${num}</b> now via Exotel…</div>`;
+    document.getElementById('msgs').appendChild(replyDiv);
+    document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
+
+    document.getElementById('cp-phone').value = num;
+    if (!_cpOpen) toggleCallPanel();
+    setTimeout(() => triggerSingleCall(), 600);
+    return;
+  }
+  return _origSend.apply(this, arguments);
+};
+</script>
+
+</body>
+</html>
