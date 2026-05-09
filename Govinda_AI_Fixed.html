@@ -1158,22 +1158,6 @@
   <button class="apply-btn" onclick="applyConfig()">✓ Apply</button>
 </div>
 
-
-
-// Strategy 1: Local Flask backend (python app.py) — no CORS, most reliable
-    {
-      name: 'Local backend (app.py)',
-      fn: async () => {
-        // 👇 THIS IS THE EXACT LINE CONNECTING TO YOUR PYTHON APP 👇
-        const res = await fetch('http://localhost:5000/call', {
-          method : 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body   : bodyStr,
-        });
-        return res;
-      }
-    },
-
 <!-- Filter Bar -->
 <div id="filter-bar">
   <label>🔽 Filter:</label>
@@ -1678,10 +1662,6 @@
 </div>
 
 <div id="toast"></div>
-
-
-
-
 
 <!-- ═══════════════════════════════════════════════════════════
      EXOTEL OUTBOUND CALL PANEL
